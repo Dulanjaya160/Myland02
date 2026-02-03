@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales - Myland Food Management System</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/management.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-utensils"></i> Myland Food Management System</h1>
+            <p>Sales Management & Reports</p>
+        </header>
+
+        <div id="navigation" data-current-page="sales"></div>
+
+        <div class="page-content">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-line"></i> Sales Management</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="showAddSaleForm()">
+                        <i class="fas fa-plus"></i> Record Sale
+                    </button>
+                    <button class="btn btn-secondary" onclick="printSales()" style="margin-left: 10px;">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-container" id="add-sale-form" style="display: none;">
+                <h3>Record Sale</h3>
+                <form id="sale-form">
+                    <div class="form-group">
+                        <label for="sale-product">Product:</label>
+                        <select id="sale-product" name="product" required>
+                            <option value="">Select a product</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-date">Date:</label>
+                        <input type="date" id="sale-date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-shop">Shop:</label>
+                        <select id="sale-shop" name="shop" required>
+                            <option value="">Select a shop</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-units">Sold Units:</label>
+                        <input type="number" id="sale-units" name="soldUnits" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-returns">Returned Units (Expired):</label>
+                        <input type="number" id="sale-returns" name="returnedUnits" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Calculated Income:</label>
+                        <div id="calculated-income" class="calculated-value">$0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Calculated Profit:</label>
+                        <div id="calculated-profit" class="calculated-value">$0.00</div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Record Sale
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddSaleForm()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="data-table">
+                <table id="sales-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Product</th>
+                            <th>Shop</th>
+                            <th>Date</th>
+                            <th>Sold Units</th>
+                            <th>Returned Units</th>
+                            <th>Income</th>
+                            <th>Profit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-tbody">
+                        <!-- Sales records will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Monthly Sales Report -->
+            <div class="section-header" style="margin-top: 30px;">
+                <h3><i class="fas fa-chart-bar"></i> Monthly Sales Report by Shop</h3>
+                <div>
+                    <div class="form-group" style="display: inline-block; margin-left: 20px;">
+                        <label for="report-month" style="margin-right: 10px;">Select Month:</label>
+                        <input type="month" id="report-month" onchange="generateMonthlyReport()">
+                    </div>
+                    <button class="btn btn-secondary" onclick="printMonthlyReport()" style="margin-left: 10px;">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+            </div>
+
+            <div class="monthly-report" id="monthly-report">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <h4>Total Sales</h4>
+                        <div class="summary-value" id="total-sales">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Total Returns</h4>
+                        <div class="summary-value" id="total-returns">0 units</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Net Profit</h4>
+                        <div class="summary-value" id="net-profit">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <table id="monthly-report-table">
+                        <thead>
+                            <tr>
+                                <th>Shop Name</th>
+                                <th>Total Sold Units</th>
+                                <th>Total Returned Units</th>
+                                <th>Total Income</th>
+                                <th>Total Profit</th>
+                                <th>Return Rate (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthly-report-tbody">
+                            <!-- Monthly report data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Daily Sales Report -->
+            <div class="section-header" style="margin-top: 30px;">
+                <h3><i class="fas fa-calendar-day"></i> Daily Sales Report</h3>
+                <div>
+                    <div class="form-group" style="display: inline-block; margin-left: 20px;">
+                        <label for="report-date" style="margin-right: 10px;">Select Date:</label>
+                        <input type="date" id="report-date" onchange="generateDailyReport()">
+                    </div>
+                    <button class="btn btn-primary" onclick="generateTodayReport()" style="margin-left: 10px;">
+                        <i class="fas fa-calendar-check"></i> Today's Report
+                    </button>
+                    <button class="btn btn-secondary" onclick="printDailyReport()" style="margin-left: 10px;">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+            </div>
+
+            <div class="daily-report" id="daily-report">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <h4>Daily Sales</h4>
+                        <div class="summary-value" id="daily-total-sales">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Daily Returns</h4>
+                        <div class="summary-value" id="daily-total-returns">0 units</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Daily Profit</h4>
+                        <div class="summary-value" id="daily-net-profit">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Shops Active</h4>
+                        <div class="summary-value" id="daily-active-shops">0</div>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <table id="daily-report-table">
+                        <thead>
+                            <tr>
+                                <th>Shop Name</th>
+                                <th>Product</th>
+                                <th>Sold Units</th>
+                                <th>Returned Units</th>
+                                <th>Income</th>
+                                <th>Profit</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-report-tbody">
+                            <!-- Daily report data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> Loading...
+        </div>
+
+        <!-- Success/Error messages -->
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script src="navigation.js"></script>
+    <script src="app.js"></script>
+    <script src="print-functions.js"></script>
+    <script>
+        // Initialize sales page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSales();
+            loadProductsForSelect('sale-product');
+            if (shops.length === 0) {
+                loadShops().then(() => {
+                    loadShopsForSelect('sale-shop');
+                });
+            } else {
+                loadShopsForSelect('sale-shop');
+            }
+            setCurrentMonth();
+            setCurrentDate('report-date');
+            setTimeout(() => {
+                generateMonthlyReport();
+                generateDailyReport();
+            }, 500);
+            setupFormHandlers();
+        });
+    </script>
+</body>
+</html>

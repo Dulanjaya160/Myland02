@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Ingredients Loading</title>
+</head>
+<body>
+    <h1>Test Ingredients Loading</h1>
+    <button onclick="testLoadIngredients()">Load Ingredients</button>
+    <div id="result"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let ingredients = [];
+        
+        function testLoadIngredients() {
+            console.log('Testing ingredient loading...');
+            fetch(`${API_BASE}/ingredients`)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Ingredients loaded:', data);
+                ingredients = data;
+                document.getElementById('result').innerHTML = 
+                    '<h3>Ingredients loaded successfully:</h3><ul>' + 
+                    data.map(ing => `<li>${ing.name} (ID: ${ing.id})</li>`).join('') + 
+                    '</ul>';
+            })
+            .catch(error => {
+                console.error('Error loading ingredients:', error);
+                document.getElementById('result').innerHTML = 
+                    '<h3>Error loading ingredients:</h3><p>' + error.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html>
