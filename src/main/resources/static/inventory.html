@@ -4,100 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory - Myland Food Management System</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/management.css">
+    <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-utensils"></i> Myland Food Management System</h1>
-            <p>Ingredient Inventory Management</p>
-        </header>
+    <div id="navigation" data-current-page="inventory"></div>
 
-        <div id="navigation" data-current-page="inventory"></div>
-
-        <div class="page-content">
-            <div class="section-header">
-                <h2><i class="fas fa-boxes"></i> Ingredient Inventory Management</h2>
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-boxes"></i> Inventory
+            </h1>
+            <div class="page-actions">
                 <button class="btn btn-primary" onclick="showAddInventoryForm()">
                     <i class="fas fa-plus"></i> Add Inventory
                 </button>
             </div>
-
-            <!-- Add/Update Inventory Form -->
-            <div class="form-container" id="add-inventory-form" style="display: none;">
-                <h3>Add/Update Ingredient Inventory</h3>
-                <form id="inventory-form">
+        </div>
+        
+        <div class="card" id="add-inventory-form" style="display: none;">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Add/Update Ingredient Inventory</h3>
+            </div>
+            <form id="inventory-form">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="inventory-ingredient">Select Ingredient:</label>
-                        <select id="inventory-ingredient" name="ingredientId" required>
+                        <select id="inventory-ingredient" name="ingredientId" class="form-control" required>
                             <option value="">Select an ingredient</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="inventory-quantity">Quantity:</label>
-                        <input type="number" id="inventory-quantity" name="quantity" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="inventory-price">Price per Unit:</label>
-                        <input type="number" id="inventory-price" name="pricePerUnit" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
                         <label for="inventory-operation">Operation:</label>
-                        <select id="inventory-operation" name="operation" required>
+                        <select id="inventory-operation" name="operation" class="form-control" required>
                             <option value="set">Set Quantity (Replace current)</option>
                             <option value="add">Add to Current</option>
                             <option value="subtract">Subtract from Current</option>
                         </select>
                     </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Update Inventory
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="hideAddInventoryForm()">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inventory-quantity">Quantity:</label>
+                        <input type="number" id="inventory-quantity" name="quantity" class="form-control" step="0.01" min="0" required>
                     </div>
-                </form>
-            </div>
-
-            <!-- Inventory Summary Cards -->
-            <div class="inventory-overview">
-                <div class="inventory-card">
-                    <div class="inventory-card-header">
-                        <i class="fas fa-boxes"></i>
-                        <h3>Total Inventory Value</h3>
-                    </div>
-                    <div class="inventory-card-content">
-                        <div class="inventory-summary" id="total-inventory-value">
-                            <div class="loading">Loading...</div>
-                        </div>
+                    <div class="form-group">
+                        <label for="inventory-price">Price per Unit:</label>
+                        <input type="number" id="inventory-price" name="pricePerUnit" class="form-control" step="0.01" min="0" required>
                     </div>
                 </div>
-
-                <div class="inventory-card">
-                    <div class="inventory-card-header">
-                        <i class="fas fa-chart-pie"></i>
-                        <h3>Inventory Summary</h3>
-                    </div>
-                    <div class="inventory-card-content">
-                        <div class="inventory-summary" id="inventory-summary">
-                            <div class="loading">Loading...</div>
-                        </div>
-                    </div>
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Update Inventory
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideAddInventoryForm()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
-            </div>
+            </form>
+        </div>
 
-            <!-- Inventory Table -->
-            <div class="data-table">
-                <table id="inventory-table">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-label">Total Inventory Value</div>
+                <div class="stat-value" id="total-inventory-value">0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="stat-label">Stock Status</div>
+                <div class="stat-value" id="inventory-summary" style="font-size: 1.2rem;">Loading...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Stock Level</h3>
+            </div>
+            <div class="table-container">
+                <table class="table" id="inventory-table">
                     <thead>
                         <tr>
                             <th>Ingredient</th>
                             <th>Type</th>
                             <th>Quantity</th>
-                            <th>Price per Unit</th>
+                            <th>Price/Unit</th>
                             <th>Total Value</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -109,15 +100,16 @@
                 </table>
             </div>
         </div>
+    </div>
 
         <!-- Loading indicator -->
         <div id="loading" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Loading...
+            <div class="loading-spinner"></div>
+            <span>Loading...</span>
         </div>
 
         <!-- Success/Error messages -->
         <div id="message" class="message" style="display: none;"></div>
-    </div>
 
     <script src="navigation.js"></script>
     <script src="app.js"></script>

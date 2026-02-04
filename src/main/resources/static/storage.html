@@ -4,111 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Storage - Myland Food Management System</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/management.css">
+    <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-utensils"></i> Myland Food Management System</h1>
-            <p>Storage Summary</p>
-        </header>
+    <div id="navigation" data-current-page="storage"></div>
 
-        <div id="navigation" data-current-page="storage"></div>
-
-        <div class="page-content">
-            <div class="section-header">
-                <h2><i class="fas fa-warehouse"></i> Storage Summary</h2>
-                <div>
-                    <button class="btn btn-primary" onclick="refreshStorageSummary()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                    <button class="btn btn-secondary" onclick="printInventory()" style="margin-left: 10px;">
-                        <i class="fas fa-print"></i> Print Inventory
-                    </button>
-                </div>
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-warehouse"></i> Storage
+            </h1>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="refreshStorageSummary()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-secondary" onclick="printInventory()">
+                    <i class="fas fa-print"></i> Print
+                </button>
             </div>
-
-            <!-- Storage Overview Cards -->
-            <div class="storage-overview">
-                <div class="storage-card">
-                    <div class="storage-card-header">
-                        <i class="fas fa-box"></i>
-                        <h3>Products in Storage</h3>
-                    </div>
-                    <div class="storage-card-content">
-                        <div class="storage-summary" id="products-storage-summary">
-                            <div class="loading">Loading...</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="storage-card">
-                    <div class="storage-card-header">
-                        <i class="fas fa-leaf"></i>
-                        <h3>Ingredients Available</h3>
-                    </div>
-                    <div class="storage-card-content">
-                        <div class="storage-summary" id="ingredients-storage-summary">
-                            <div class="loading">Loading...</div>
-                        </div>
-                    </div>
-                </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
+                <div class="stat-label">Products in Storage</div>
+                <div class="stat-value" id="products-storage-summary">0</div>
             </div>
-
-            <!-- Detailed Storage Tables -->
-            <div class="storage-details">
-                <div class="storage-section">
-                    <h3><i class="fas fa-box"></i> Product Inventory</h3>
-                    <div class="data-table">
-                        <table id="storage-products-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Produced</th>
-                                    <th>Sold</th>
-                                    <th>In Storage</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="storage-products-tbody">
-                                <!-- Product storage data will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="storage-section">
-                    <h3><i class="fas fa-leaf"></i> Ingredient Inventory</h3>
-                    <div class="data-table">
-                        <table id="storage-ingredients-table">
-                            <thead>
-                                <tr>
-                                    <th>Ingredient</th>
-                                    <th>Type</th>
-                                    <th>Used in Production</th>
-                                    <th>Available</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="storage-ingredients-tbody">
-                                <!-- Ingredient storage data will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+                <div class="stat-label">Ingredients Available</div>
+                <div class="stat-value" id="ingredients-storage-summary">0</div>
             </div>
         </div>
 
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-box"></i> Product Inventory</h3>
+            </div>
+            <div class="table-container">
+                <table class="table" id="storage-products-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Produced</th>
+                            <th>Sold</th>
+                            <th>In Storage</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storage-products-tbody">
+                        <!-- Product storage data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-leaf"></i> Ingredient Inventory</h3>
+            </div>
+            <div class="table-container">
+                <table class="table" id="storage-ingredients-table">
+                    <thead>
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Type</th>
+                            <th>Used in Production</th>
+                            <th>Available</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storage-ingredients-tbody">
+                        <!-- Ingredient storage data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
         <!-- Loading indicator -->
         <div id="loading" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Loading...
+            <div class="loading-spinner"></div>
+            <span>Loading...</span>
         </div>
 
         <!-- Success/Error messages -->
         <div id="message" class="message" style="display: none;"></div>
-    </div>
 
     <script src="navigation.js"></script>
     <script src="app.js"></script>

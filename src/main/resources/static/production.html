@@ -4,80 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production - Myland Food Management System</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/management.css">
+    <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-utensils"></i> Myland Food Management System</h1>
-            <p>Production Management</p>
-        </header>
+    <div id="navigation" data-current-page="production"></div>
 
-        <div id="navigation" data-current-page="production"></div>
-
-        <div class="page-content">
-            <div class="section-header">
-                <h2><i class="fas fa-industry"></i> Production Management</h2>
-                <div>
-                    <button class="btn btn-primary" onclick="showAddProductionForm()">
-                        <i class="fas fa-plus"></i> Record Production
-                    </button>
-                    <button class="btn btn-secondary" onclick="printProduction()" style="margin-left: 10px;">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                </div>
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-industry"></i> Production
+            </h1>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="showAddProductionForm()">
+                    <i class="fas fa-plus"></i> Record Production
+                </button>
+                <button class="btn btn-secondary" onclick="printProduction()">
+                    <i class="fas fa-print"></i> Print
+                </button>
             </div>
-            
-            <div class="form-container" id="add-production-form" style="display: none;">
-                <h3>Record Production</h3>
-                <form id="production-form">
+        </div>
+        
+        <div class="card" id="add-production-form" style="display: none;">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Record Production</h3>
+            </div>
+            <form id="production-form">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="production-product">Product:</label>
-                        <select id="production-product" name="product" required>
+                        <select id="production-product" name="product" class="form-control" required>
                             <option value="">Select a product</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="production-date">Date:</label>
-                        <input type="date" id="production-date" name="date" required>
+                        <input type="date" id="production-date" name="date" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label for="production-units">Produced Units:</label>
-                        <input type="number" id="production-units" name="producedUnits" required>
+                        <input type="number" id="production-units" name="producedUnits" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <label>Used Ingredients:</label>
-                        <div id="ingredient-usage-container">
-                            <div class="ingredient-usage-item">
-                                <select class="ingredient-select" name="ingredientIds[]" required>
-                                    <option value="">Select ingredient</option>
-                                </select>
-                                <input type="number" class="ingredient-quantity" name="ingredientQuantities[]" 
-                                       step="0.01" min="0" placeholder="Quantity used" required>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredientUsage(this)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                </div>
+                <div class="form-group">
+                    <label>Used Ingredients:</label>
+                    <div id="ingredient-usage-container">
+                        <div class="ingredient-usage-item" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <select class="ingredient-select form-control" name="ingredientIds[]" required>
+                                <option value="">Select ingredient</option>
+                            </select>
+                            <input type="number" class="ingredient-quantity form-control" name="ingredientQuantities[]" 
+                                   step="0.01" min="0" placeholder="Quantity used" required>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredientUsage(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                        <button type="button" class="btn btn-info btn-sm" onclick="addIngredientUsage()">
-                            <i class="fas fa-plus"></i> Add Ingredient
-                        </button>
                     </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Record Production
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="hideAddProductionForm()">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addIngredientUsage()">
+                        <i class="fas fa-plus"></i> Add Ingredient
+                    </button>
+                </div>
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Record Production
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideAddProductionForm()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
 
-            <div class="data-table">
-                <table id="production-table">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Production History</h3>
+            </div>
+            <div class="table-container">
+                <table class="table" id="production-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -94,15 +97,16 @@
                 </table>
             </div>
         </div>
+    </div>
 
         <!-- Loading indicator -->
         <div id="loading" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Loading...
+            <div class="loading-spinner"></div>
+            <span>Loading...</span>
         </div>
 
         <!-- Success/Error messages -->
         <div id="message" class="message" style="display: none;"></div>
-    </div>
 
     <script src="navigation.js"></script>
     <script src="app.js"></script>

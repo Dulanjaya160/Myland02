@@ -4,66 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shops - Myland Food Management System</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/management.css">
+    <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-utensils"></i> Myland Food Management System</h1>
-            <p>Shop Management</p>
-        </header>
+    <div id="navigation" data-current-page="shops"></div>
 
-        <div id="navigation" data-current-page="shops"></div>
-
-        <div class="page-content">
-            <div class="section-header">
-                <h2><i class="fas fa-store"></i> Shop Management</h2>
-                <div>
-                    <button class="btn btn-primary" onclick="showAddShopForm()">
-                        <i class="fas fa-plus"></i> Add Shop
-                    </button>
-                    <button class="btn btn-secondary" onclick="printShops()" style="margin-left: 10px;">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                </div>
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-store"></i> Shops
+            </h1>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="showAddShopForm()">
+                    <i class="fas fa-plus"></i> Add Shop
+                </button>
+                <button class="btn btn-secondary" onclick="printShops()">
+                    <i class="fas fa-print"></i> Print
+                </button>
             </div>
-
-            <!-- Add/Edit Shop Form -->
-            <div class="form-container" id="add-shop-form" style="display: none;">
-                <h3>Add/Edit Shop</h3>
-                <form id="shop-form">
+        </div>
+        
+        <div class="card" id="add-shop-form" style="display: none;">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Add/Edit Shop</h3>
+            </div>
+            <form id="shop-form">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="shop-name">Shop Name:</label>
-                        <input type="text" id="shop-name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="shop-address">Address:</label>
-                        <textarea id="shop-address" name="address" rows="3" required></textarea>
+                        <input type="text" id="shop-name" name="name" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label for="shop-contact">Contact Number:</label>
-                        <input type="tel" id="shop-contact" name="contactNumber" required>
+                        <input type="tel" id="shop-contact" name="contactNumber" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <label for="shop-email">Email:</label>
-                        <input type="email" id="shop-email" name="email">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Save Shop
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="hideAddShopForm()">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="form-group">
+                    <label for="shop-address">Address:</label>
+                    <textarea id="shop-address" name="address" class="form-control" rows="2" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="shop-email">Email:</label>
+                    <input type="email" id="shop-email" name="email" class="form-control">
+                </div>
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save Shop
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideAddShopForm()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
 
-            <!-- Shops Table -->
-            <div class="data-table">
-                <table id="shops-table">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Shop List</h3>
+            </div>
+            <div class="table-container">
+                <table class="table" id="shops-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -79,47 +80,43 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- Shop Sales History Section -->
-            <div class="section-header" style="margin-top: 30px;">
-                <h3><i class="fas fa-history"></i> Shop Sales History</h3>
-                <div>
-                    <div class="form-group" style="display: inline-block; margin-left: 20px;">
-                        <label for="shop-history-select" style="margin-right: 10px;">Select Shop:</label>
-                        <select id="shop-history-select" onchange="loadShopSalesHistory()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                            <option value="">-- Select a Shop --</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-secondary" onclick="printShopHistory()" style="margin-left: 10px;" id="print-shop-history-btn" disabled>
-                        <i class="fas fa-print"></i> Print History
-                    </button>
+        <div class="page-header" style="margin-top: 2rem;">
+            <h2 class="page-title"><i class="fas fa-history"></i> Shop Sales History</h2>
+            <div class="page-actions">
+                <select id="shop-history-select" class="form-control" onchange="loadShopSalesHistory()" style="width: auto;">
+                    <option value="">-- Select a Shop --</option>
+                </select>
+                <button class="btn btn-secondary" onclick="printShopHistory()" id="print-shop-history-btn" disabled>
+                    <i class="fas fa-print"></i> Print History
+                </button>
+            </div>
+        </div>
+
+        <div id="shop-sales-history" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value" id="shop-total-sales">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Units Sold</div>
+                    <div class="stat-value" id="shop-total-units">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Returns</div>
+                    <div class="stat-value" id="shop-total-returns">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Transactions</div>
+                    <div class="stat-value" id="shop-total-transactions">0</div>
                 </div>
             </div>
 
-            <div id="shop-sales-history" style="display: none; margin-top: 20px;">
-                <!-- Summary Cards -->
-                <div class="report-summary">
-                    <div class="summary-card">
-                        <h4>Total Sales</h4>
-                        <div class="summary-value" id="shop-total-sales">$0.00</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Total Units Sold</h4>
-                        <div class="summary-value" id="shop-total-units">0</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Total Returns</h4>
-                        <div class="summary-value" id="shop-total-returns">0</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Total Transactions</h4>
-                        <div class="summary-value" id="shop-total-transactions">0</div>
-                    </div>
-                </div>
-
-                <!-- Sales History Table -->
-                <div class="data-table">
-                    <table id="shop-history-table">
+            <div class="card">
+                <div class="table-container">
+                    <table class="table" id="shop-history-table">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -137,15 +134,16 @@
                 </div>
             </div>
         </div>
+    </div>
 
         <!-- Loading indicator -->
         <div id="loading" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Loading...
+            <div class="loading-spinner"></div>
+            <span>Loading...</span>
         </div>
 
         <!-- Success/Error messages -->
         <div id="message" class="message" style="display: none;"></div>
-    </div>
 
     <script src="navigation.js"></script>
     <script src="app.js"></script>

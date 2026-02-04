@@ -4,80 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales - Myland Food Management System</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/management.css">
+    <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-utensils"></i> Myland Food Management System</h1>
-            <p>Sales Management & Reports</p>
-        </header>
+    <div id="navigation" data-current-page="sales"></div>
 
-        <div id="navigation" data-current-page="sales"></div>
-
-        <div class="page-content">
-            <div class="section-header">
-                <h2><i class="fas fa-chart-line"></i> Sales Management</h2>
-                <div>
-                    <button class="btn btn-primary" onclick="showAddSaleForm()">
-                        <i class="fas fa-plus"></i> Record Sale
-                    </button>
-                    <button class="btn btn-secondary" onclick="printSales()" style="margin-left: 10px;">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                </div>
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-chart-line"></i> Sales
+            </h1>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="showAddSaleForm()">
+                    <i class="fas fa-plus"></i> Record Sale
+                </button>
+                <button class="btn btn-secondary" onclick="printSales()">
+                    <i class="fas fa-print"></i> Print
+                </button>
             </div>
-            
-            <div class="form-container" id="add-sale-form" style="display: none;">
-                <h3>Record Sale</h3>
-                <form id="sale-form">
+        </div>
+        
+        <div class="card" id="add-sale-form" style="display: none;">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Record Sale</h3>
+            </div>
+            <form id="sale-form">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="sale-product">Product:</label>
-                        <select id="sale-product" name="product" required>
+                        <select id="sale-product" name="product" class="form-control" required>
                             <option value="">Select a product</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="sale-date">Date:</label>
-                        <input type="date" id="sale-date" name="date" required>
+                        <input type="date" id="sale-date" name="saleDate" class="form-control" required>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="sale-shop">Shop:</label>
-                        <select id="sale-shop" name="shop" required>
+                        <select id="sale-shop" name="shop" class="form-control" required>
                             <option value="">Select a shop</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="sale-units">Sold Units:</label>
-                        <input type="number" id="sale-units" name="soldUnits" required>
+                        <input type="number" id="sale-units" name="soldUnits" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label for="sale-returns">Returned Units (Expired):</label>
-                        <input type="number" id="sale-returns" name="returnedUnits" min="0" value="0">
+                        <input type="number" id="sale-returns" name="returnedUnits" class="form-control" min="0" value="0">
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>Calculated Income:</label>
-                        <div id="calculated-income" class="calculated-value">$0.00</div>
+                        <div id="calculated-income" class="stat-value" style="font-size: 1.2rem;">$0.00</div>
                     </div>
                     <div class="form-group">
                         <label>Calculated Profit:</label>
-                        <div id="calculated-profit" class="calculated-value">$0.00</div>
+                        <div id="calculated-profit" class="stat-value" style="font-size: 1.2rem; color: var(--success);">$0.00</div>
                     </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Record Sale
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="hideAddSaleForm()">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Record Sale
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideAddSaleForm()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
 
-            <div class="data-table">
-                <table id="sales-table">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Recent Sales</h3>
+            </div>
+            <div class="table-container">
+                <table class="table" id="sales-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -96,44 +103,43 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- Monthly Sales Report -->
-            <div class="section-header" style="margin-top: 30px;">
-                <h3><i class="fas fa-chart-bar"></i> Monthly Sales Report by Shop</h3>
-                <div>
-                    <div class="form-group" style="display: inline-block; margin-left: 20px;">
-                        <label for="report-month" style="margin-right: 10px;">Select Month:</label>
-                        <input type="month" id="report-month" onchange="generateMonthlyReport()">
-                    </div>
-                    <button class="btn btn-secondary" onclick="printMonthlyReport()" style="margin-left: 10px;">
-                        <i class="fas fa-print"></i> Print Report
-                    </button>
+        <!-- Monthly Sales Report -->
+        <div class="page-header" style="margin-top: 2rem;">
+            <h2 class="page-title"><i class="fas fa-chart-bar"></i> Monthly Report</h2>
+            <div class="page-actions">
+                <input type="month" id="report-month" class="form-control" onchange="generateMonthlyReport()" style="width: auto;">
+                <button class="btn btn-secondary" onclick="printMonthlyReport()">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
+        </div>
+
+        <div class="monthly-report" id="monthly-report">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value" id="total-sales">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Returns</div>
+                    <div class="stat-value" id="total-returns">0</div>
+                </div>
+                <div class="stat-card" style="border-top-color: var(--success);">
+                    <div class="stat-label">Net Profit</div>
+                    <div class="stat-value" id="net-profit" style="color: var(--success);">$0.00</div>
                 </div>
             </div>
 
-            <div class="monthly-report" id="monthly-report">
-                <div class="report-summary">
-                    <div class="summary-card">
-                        <h4>Total Sales</h4>
-                        <div class="summary-value" id="total-sales">$0.00</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Total Returns</h4>
-                        <div class="summary-value" id="total-returns">0 units</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Net Profit</h4>
-                        <div class="summary-value" id="net-profit">$0.00</div>
-                    </div>
-                </div>
-
-                <div class="data-table">
-                    <table id="monthly-report-table">
+            <div class="card">
+                <div class="table-container">
+                    <table class="table" id="monthly-report-table">
                         <thead>
                             <tr>
                                 <th>Shop Name</th>
-                                <th>Total Sold Units</th>
-                                <th>Total Returned Units</th>
+                                <th>Sold Units</th>
+                                <th>Returned Units</th>
                                 <th>Total Income</th>
                                 <th>Total Profit</th>
                                 <th>Return Rate (%)</th>
@@ -145,46 +151,45 @@
                     </table>
                 </div>
             </div>
+        </div>
 
-            <!-- Daily Sales Report -->
-            <div class="section-header" style="margin-top: 30px;">
-                <h3><i class="fas fa-calendar-day"></i> Daily Sales Report</h3>
-                <div>
-                    <div class="form-group" style="display: inline-block; margin-left: 20px;">
-                        <label for="report-date" style="margin-right: 10px;">Select Date:</label>
-                        <input type="date" id="report-date" onchange="generateDailyReport()">
-                    </div>
-                    <button class="btn btn-primary" onclick="generateTodayReport()" style="margin-left: 10px;">
-                        <i class="fas fa-calendar-check"></i> Today's Report
-                    </button>
-                    <button class="btn btn-secondary" onclick="printDailyReport()" style="margin-left: 10px;">
-                        <i class="fas fa-print"></i> Print Report
-                    </button>
+        <!-- Daily Sales Report -->
+        <div class="page-header" style="margin-top: 2rem;">
+            <h2 class="page-title"><i class="fas fa-calendar-day"></i> Daily Report</h2>
+            <div class="page-actions">
+                <input type="date" id="report-date" class="form-control" onchange="generateDailyReport()" style="width: auto;">
+                <button class="btn btn-primary" onclick="generateTodayReport()">
+                    <i class="fas fa-calendar-check"></i> Today
+                </button>
+                <button class="btn btn-secondary" onclick="printDailyReport()">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
+        </div>
+
+        <div class="daily-report" id="daily-report">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Daily Sales</div>
+                    <div class="stat-value" id="daily-total-sales">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Daily Returns</div>
+                    <div class="stat-value" id="daily-total-returns">0</div>
+                </div>
+                <div class="stat-card" style="border-top-color: var(--success);">
+                    <div class="stat-label">Daily Profit</div>
+                    <div class="stat-value" id="daily-net-profit" style="color: var(--success);">$0.00</div>
+                </div>
+                <div class="stat-card" style="border-top-color: var(--primary);">
+                    <div class="stat-label">Shops Active</div>
+                    <div class="stat-value" id="daily-active-shops">0</div>
                 </div>
             </div>
 
-            <div class="daily-report" id="daily-report">
-                <div class="report-summary">
-                    <div class="summary-card">
-                        <h4>Daily Sales</h4>
-                        <div class="summary-value" id="daily-total-sales">$0.00</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Daily Returns</h4>
-                        <div class="summary-value" id="daily-total-returns">0 units</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Daily Profit</h4>
-                        <div class="summary-value" id="daily-net-profit">$0.00</div>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Shops Active</h4>
-                        <div class="summary-value" id="daily-active-shops">0</div>
-                    </div>
-                </div>
-
-                <div class="data-table">
-                    <table id="daily-report-table">
+            <div class="card">
+                <div class="table-container">
+                    <table class="table" id="daily-report-table">
                         <thead>
                             <tr>
                                 <th>Shop Name</th>
@@ -203,15 +208,16 @@
                 </div>
             </div>
         </div>
+    </div>
 
         <!-- Loading indicator -->
         <div id="loading" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Loading...
+            <div class="loading-spinner"></div>
+            <span>Loading...</span>
         </div>
 
         <!-- Success/Error messages -->
         <div id="message" class="message" style="display: none;"></div>
-    </div>
 
     <script src="navigation.js"></script>
     <script src="app.js"></script>

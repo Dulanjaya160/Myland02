@@ -1,54 +1,29 @@
 package com.example.myland02.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "production_ingredients")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductionIngredient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @ManyToOne
+    @JoinColumn(name = "production_id")
     @JsonBackReference
     private Production production;
     
     @ManyToOne
+    @JoinColumn(name = "ingredient_id")
     private Ingredient ingredient;
     
+    @Column(nullable = false)
     private double quantityUsed;
-
-    // Default constructor
-    public ProductionIngredient() {}
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Production getProduction() {
-        return production;
-    }
-
-    public void setProduction(Production production) {
-        this.production = production;
-    }
-
-    public Ingredient getIngredient() {
-        return ingredient;
-    }
-
-    public void setIngredient(Ingredient ingredient) {
-        this.ingredient = ingredient;
-    }
-
-    public double getQuantityUsed() {
-        return quantityUsed;
-    }
-
-    public void setQuantityUsed(double quantityUsed) {
-        this.quantityUsed = quantityUsed;
-    }
 }

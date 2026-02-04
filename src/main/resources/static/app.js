@@ -140,7 +140,7 @@ function handleProductSubmit(e) {
     const formData = new FormData(e.target);
     const product = {
         name: formData.get('name'),
-        price: parseFloat(formData.get('price')),
+        basePrice: parseFloat(formData.get('basePrice')),
         sellingPrice: parseFloat(formData.get('sellingPrice')),
         productCost: parseFloat(formData.get('productCost'))
     };
@@ -207,7 +207,7 @@ function displayProducts(products) {
         row.innerHTML = `
             <td>${product.id}</td>
             <td>${product.name}</td>
-            <td>$${(product.price || 0).toFixed(2)}</td>
+            <td>$${(product.basePrice || 0).toFixed(2)}</td>
             <td>$${(product.sellingPrice || 0).toFixed(2)}</td>
             <td>$${(product.productCost || 0).toFixed(2)}</td>
             <td style="color: ${profitMarginColor}; font-weight: bold;">
@@ -246,7 +246,7 @@ function handleIngredientSubmit(e) {
     const formData = new FormData(e.target);
     const ingredient = {
         name: formData.get('name'),
-        ingredientType: formData.get('ingredientType'),
+        type: formData.get('type'),
         quantity: parseFloat(formData.get('quantity')),
         pricePerUnit: parseFloat(formData.get('pricePerUnit'))
     };
@@ -308,7 +308,7 @@ function displayIngredients(ingredients) {
     }
 
     ingredients.forEach(ingredient => {
-        const ingredientType = ingredient.ingredientType || 'Not specified';
+        const ingredientType = ingredient.type || 'Not specified';
         const typeColor = ingredientType !== 'Not specified' ? '#28a745' : '#6c757d';
         
         const row = document.createElement('tr');
@@ -636,10 +636,10 @@ function handleSaleSubmit(e) {
     const sale = {
         product: product,
         shop: shop,
-        date: formData.get('date'),
+        saleDate: formData.get('saleDate'),
         soldUnits: parseInt(formData.get('soldUnits')),
         returnedUnits: parseInt(formData.get('returnedUnits')) || 0
-        // Income will be calculated automatically by the backend
+        // totalIncome will be calculated automatically by the backend
     };
     
     // Check if we're editing an existing sale
@@ -712,8 +712,8 @@ function displaySales(sales) {
     }
 
     sales.forEach(sale => {
-        const income = sale.income || 0;
-        const profit = sale.profit || 0;
+        const income = sale.totalIncome || 0;
+        const profit = sale.totalProfit || 0;
         const profitColor = profit > 0 ? '#28a745' : profit < 0 ? '#dc3545' : '#6c757d';
         
         const row = document.createElement('tr');
@@ -721,7 +721,7 @@ function displaySales(sales) {
             <td>${sale.id}</td>
             <td>${sale.product ? sale.product.name : 'N/A'}</td>
             <td>${sale.shop ? sale.shop.name : 'N/A'}</td>
-            <td>${sale.date}</td>
+            <td>${sale.saleDate}</td>
             <td>${sale.soldUnits}</td>
             <td>${sale.returnedUnits || 0}</td>
             <td>$${income.toFixed(2)}</td>
@@ -881,7 +881,7 @@ function displayIngredientStorageSummary(storageData) {
         </div>
         <div class="summary-item">
             <span>Types Available:</span>
-            <span>${new Set(Object.values(storageData).map(item => item.ingredient.ingredientType)).size}</span>
+            <span>${new Set(Object.values(storageData).map(item => item.ingredient.type)).size}</span>
         </div>
     `;
 }
@@ -913,7 +913,7 @@ function displayIngredientStorageTable(storageData) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${item.ingredient.name}</td>
-            <td>${item.ingredient.ingredientType || 'Not specified'}</td>
+            <td>${item.ingredient.type || 'Not specified'}</td>
             <td>${item.used.toFixed(2)}</td>
             <td>${item.available.toFixed(2)}</td>
             <td><span class="storage-status ${status.class}">${status.text}</span></td>
@@ -976,7 +976,7 @@ function populateInventoryIngredientSelect() {
     ingredients.forEach(ingredient => {
         const option = document.createElement('option');
         option.value = ingredient.id;
-        option.textContent = `${ingredient.name} (${ingredient.ingredientType || 'No type'})`;
+        option.textContent = `${ingredient.name} (${ingredient.type || 'No type'})`;
         select.appendChild(option);
     });
 }
@@ -1048,7 +1048,7 @@ function displayInventory(ingredients) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${ingredient.name}</td>
-            <td>${ingredient.ingredientType || 'Not specified'}</td>
+            <td>${ingredient.type || 'Not specified'}</td>
             <td>${quantity.toFixed(2)}</td>
             <td>$${pricePerUnit.toFixed(2)}</td>
             <td>$${totalValue.toFixed(2)}</td>
@@ -1208,10 +1208,9 @@ function editProduct(id) {
     
     showAddProductForm();
     document.getElementById('product-name').value = product.name;
-    document.getElementById('product-price').value = product.price;
+    document.getElementById('product-price').value = product.basePrice;
     document.getElementById('product-selling-price').value = product.sellingPrice;
     document.getElementById('product-cost').value = product.productCost;
-    document.getElementById('product-storage').value = product.storageQuantity;
     
     document.querySelector('#add-product-form h3').textContent = 'Edit Product';
     document.getElementById('product-form').dataset.editId = id;
@@ -1244,7 +1243,7 @@ function editIngredient(id) {
     
     showAddIngredientForm();
     document.getElementById('ingredient-name').value = ingredient.name;
-    document.getElementById('ingredient-type').value = ingredient.ingredientType || '';
+    document.getElementById('ingredient-type').value = ingredient.type || '';
     document.getElementById('ingredient-quantity').value = ingredient.quantity;
     document.getElementById('ingredient-price').value = ingredient.pricePerUnit;
     
@@ -1305,7 +1304,7 @@ function editSale(id) {
     // Populate the form with sale data
     document.getElementById('sale-product').value = sale.product ? sale.product.id : '';
     document.getElementById('sale-shop').value = sale.shop ? sale.shop.id : '';
-    document.getElementById('sale-date').value = sale.date;
+    document.getElementById('sale-date').value = sale.saleDate;
     document.getElementById('sale-sold-units').value = sale.soldUnits;
     document.getElementById('sale-returned-units').value = sale.returnedUnits;
     
@@ -1476,7 +1475,7 @@ function loadShopSalesHistory() {
     let totalReturns = 0;
     
     shopSales.forEach(sale => {
-        totalSales += sale.income || (sale.soldUnits * (sale.product ? sale.product.sellingPrice : 0));
+        totalSales += sale.totalIncome || (sale.soldUnits * (sale.product ? sale.product.sellingPrice : 0));
         totalUnits += sale.soldUnits;
         totalReturns += sale.returnedUnits;
     });
@@ -1505,16 +1504,16 @@ function displayShopSalesHistory(shopSales, shop) {
     }
     
     // Sort by date (newest first)
-    shopSales.sort((a, b) => new Date(b.date) - new Date(a.date));
+    shopSales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
     
     shopSales.forEach(sale => {
-        const income = sale.income || (sale.soldUnits * (sale.product ? sale.product.sellingPrice : 0));
-        const profit = sale.profit || 0;
+        const income = sale.totalIncome || (sale.soldUnits * (sale.product ? sale.product.sellingPrice : 0));
+        const profit = sale.totalProfit || 0;
         const profitColor = profit > 0 ? '#28a745' : profit < 0 ? '#dc3545' : '#6c757d';
         
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${sale.date}</td>
+            <td>${sale.saleDate}</td>
             <td>${sale.product ? sale.product.name : 'N/A'}</td>
             <td>${sale.soldUnits}</td>
             <td>${sale.returnedUnits}</td>
@@ -1570,7 +1569,7 @@ function generateMonthlyReport() {
     
     // Filter sales for the selected month
     const monthlySales = sales.filter(sale => {
-        const saleDate = new Date(sale.date);
+        const saleDate = new Date(sale.saleDate);
         return saleDate >= startDate && saleDate <= endDate;
     });
     
@@ -1599,12 +1598,12 @@ function generateMonthlyReportData(monthlySales) {
         
         shopData[shopName].totalSoldUnits += sale.soldUnits || 0;
         shopData[shopName].totalReturnedUnits += sale.returnedUnits || 0;
-        shopData[shopName].totalIncome += sale.income || 0;
-        shopData[shopName].totalProfit += sale.profit || 0;
+        shopData[shopName].totalIncome += sale.totalIncome || 0;
+        shopData[shopName].totalProfit += sale.totalProfit || 0;
         
-        totalSales += sale.income || 0;
+        totalSales += sale.totalIncome || 0;
         totalReturns += sale.returnedUnits || 0;
-        totalProfit += sale.profit || 0;
+        totalProfit += sale.totalProfit || 0;
     });
     
     // Update summary cards
@@ -1658,7 +1657,7 @@ function generateDailyReport() {
     
     // Filter sales for the selected date
     const dailySales = sales.filter(sale => {
-        return sale.date === selectedDate;
+        return sale.saleDate === selectedDate;
     });
     
     generateDailyReportData(dailySales, selectedDate);
@@ -1678,9 +1677,9 @@ function generateDailyReportData(dailySales, selectedDate) {
     
     // Calculate totals
     dailySales.forEach(sale => {
-        totalSales += sale.income || 0;
+        totalSales += sale.totalIncome || 0;
         totalReturns += sale.returnedUnits || 0;
-        totalProfit += sale.profit || 0;
+        totalProfit += sale.totalProfit || 0;
         if (sale.shop) {
             activeShops.add(sale.shop.name);
         }
@@ -1713,8 +1712,8 @@ function displayDailyReportTable(dailySales) {
     });
     
     dailySales.forEach(sale => {
-        const income = sale.income || 0;
-        const profit = sale.profit || 0;
+        const income = sale.totalIncome || 0;
+        const profit = sale.totalProfit || 0;
         const profitColor = profit > 0 ? '#28a745' : profit < 0 ? '#dc3545' : '#6c757d';
         const time = sale.time || 'N/A';
         

@@ -45,11 +45,11 @@ async function loadDashboardData() {
 
 function updateStatistics(products, ingredients, production, sales, shops) {
     // Calculate total revenue
-    const totalRevenue = sales.reduce((sum, sale) => sum + (sale.income || 0), 0);
+    const totalRevenue = sales.reduce((sum, sale) => sum + (sale.totalIncome || 0), 0);
     document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
     
     // Calculate total profit
-    const totalProfit = sales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+    const totalProfit = sales.reduce((sum, sale) => sum + (sale.totalProfit || 0), 0);
     document.getElementById('total-profit').textContent = `$${totalProfit.toFixed(2)}`;
     
     // Calculate products in storage
@@ -81,29 +81,29 @@ function updateStatistics(products, ingredients, production, sales, shops) {
     
     // Today's sales
     const today = new Date().toISOString().split('T')[0];
-    const todaySales = sales.filter(sale => sale.date === today).length;
+    const todaySales = sales.filter(sale => sale.saleDate === today).length;
     document.getElementById('today-sales').textContent = todaySales;
     
     // Calculate month-over-month changes (simplified)
     const currentMonth = new Date().getMonth();
     const lastMonthSales = sales.filter(sale => {
-        const saleDate = new Date(sale.date);
+        const saleDate = new Date(sale.saleDate);
         return saleDate.getMonth() === currentMonth - 1;
     });
     const currentMonthSales = sales.filter(sale => {
-        const saleDate = new Date(sale.date);
+        const saleDate = new Date(sale.saleDate);
         return saleDate.getMonth() === currentMonth;
     });
     
-    const lastMonthRevenue = lastMonthSales.reduce((sum, s) => sum + (s.income || 0), 0);
-    const currentMonthRevenue = currentMonthSales.reduce((sum, s) => sum + (s.income || 0), 0);
+    const lastMonthRevenue = lastMonthSales.reduce((sum, s) => sum + (s.totalIncome || 0), 0);
+    const currentMonthRevenue = currentMonthSales.reduce((sum, s) => sum + (s.totalIncome || 0), 0);
     
     const revenueChange = lastMonthRevenue > 0 
         ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
         : '0';
     
-    const lastMonthProfit = lastMonthSales.reduce((sum, s) => sum + (s.profit || 0), 0);
-    const currentMonthProfit = currentMonthSales.reduce((sum, s) => sum + (s.profit || 0), 0);
+    const lastMonthProfit = lastMonthSales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
+    const currentMonthProfit = currentMonthSales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
     
     const profitChange = lastMonthProfit > 0 
         ? ((currentMonthProfit - lastMonthProfit) / lastMonthProfit * 100).toFixed(1)
@@ -126,9 +126,9 @@ function updateSalesChart(sales) {
         const dateStr = date.toISOString().split('T')[0];
         labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
         
-        const daySales = sales.filter(sale => sale.date === dateStr);
-        const dayRevenue = daySales.reduce((sum, s) => sum + (s.income || 0), 0);
-        const dayProfit = daySales.reduce((sum, s) => sum + (s.profit || 0), 0);
+        const daySales = sales.filter(sale => sale.saleDate === dateStr);
+        const dayRevenue = daySales.reduce((sum, s) => sum + (s.totalIncome || 0), 0);
+        const dayProfit = daySales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
         
         revenueData.push(dayRevenue);
         profitData.push(dayProfit);
@@ -194,7 +194,7 @@ function updateShopChart(sales, shops) {
         if (!shopData[shopName]) {
             shopData[shopName] = 0;
         }
-        shopData[shopName] += sale.income || 0;
+        shopData[shopName] += sale.totalIncome || 0;
     });
     
     const labels = Object.keys(shopData);
@@ -247,7 +247,7 @@ function updateShopChart(sales, shops) {
 
 function updateRecentSales(sales) {
     const recentSales = sales
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
         .slice(0, 5);
     
     const container = document.getElementById('recent-sales');
@@ -258,9 +258,9 @@ function updateRecentSales(sales) {
     }
     
     container.innerHTML = recentSales.map(sale => {
-        const income = sale.income || 0;
-        const profit = sale.profit || 0;
-        const date = new Date(sale.date).toLocaleDateString('en-US', { 
+        const income = sale.totalIncome || 0;
+        const profit = sale.totalProfit || 0;
+        const date = new Date(sale.saleDate).toLocaleDateString('en-US', { 
             month: 'short', 
             day: 'numeric',
             year: 'numeric'

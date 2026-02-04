@@ -1,4 +1,8 @@
 package com.example.myland02.controller;
+import com.example.myland02.model.Ingredient;
+import com.example.myland02.model.Product;
+import com.example.myland02.model.Sale;
+import com.example.myland02.model.Shop;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -6,6 +10,8 @@ import com.example.myland02.model.*;
 import com.example.myland02.repository.*;
 import com.example.myland02.dto.ProductionRequest;
 import com.example.myland02.dto.ProductionIngredientRequest;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -18,7 +24,10 @@ public class MylandController {
     @Autowired private ShopRepository shopRepo;
 
     @PostMapping("/product")
-    public Product addProduct(@RequestBody Product product) { return productRepo.save(product); }
+    public Product addProduct(@RequestBody Product product) {
+        System.out.println("Saving product: " + product.getName() + ", basePrice: " + product.getBasePrice());
+        return productRepo.save(product);
+    }
     @PostMapping("/ingredient")
     public Ingredient addIngredient(@RequestBody Ingredient i) { return ingredientRepo.save(i); }
     @PostMapping("/production")
@@ -114,22 +123,6 @@ public class MylandController {
     public Sale recordSale(@RequestBody Sale s) { return saleRepo.save(s); }
     @PostMapping("/shop")
     public Shop addShop(@RequestBody Shop shop) { return shopRepo.save(shop); }
-    
-    // GET endpoints for fetching data
-    @GetMapping("/products")
-    public java.util.List<Product> getAllProducts() { return productRepo.findAll(); }
-    
-    @GetMapping("/ingredients")
-    public java.util.List<Ingredient> getAllIngredients() { return ingredientRepo.findAll(); }
-    
-    @GetMapping("/production")
-    public java.util.List<Production> getAllProduction() { return prodRepo.findAll(); }
-    
-    @GetMapping("/sales")
-    public java.util.List<Sale> getAllSales() { return saleRepo.findAll(); }
-    
-    @GetMapping("/shops")
-    public java.util.List<Shop> getAllShops() { return shopRepo.findAll(); }
     
     // DELETE endpoints
     @DeleteMapping("/product/{id}")
