@@ -1,5 +1,5 @@
 // Dashboard-specific JavaScript
-const API_BASE = '/api';
+const API_BASE = '/api/myland';
 
 let salesChart = null;
 let shopChart = null;

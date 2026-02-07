@@ -1,127 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Myland Food Management System</title>
-
-    <!-- Use absolute path to ensure the CSS is loaded from the web root -->
-    <link rel="stylesheet" href="/css/professional.css">
-    <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="images/myland-icon.png">
+    <script src="app.js?v=1.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-<div id="navigation" data-current-page="dashboard"></div>
-
-<!-- Main Content -->
-<div class="main-content">
-    <div class="page-header">
-        <h1 class="page-title">
-            <i class="fas fa-chart-line"></i> Dashboard
-        </h1>
-        <div class="page-actions">
-            <button class="btn btn-primary">
-                <i class="fas fa-download"></i> Export Report
-            </button>
-            <button class="btn btn-secondary">
-                <i class="fas fa-calendar"></i> Filter
-            </button>
+    <div id="navigation" data-current-page="dashboard"></div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-utensils"></i>
+            Myland Food Management
         </div>
-    </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="products.html">Products</a>
+            <a href="ingredients.html">Ingredients</a>
+            <a href="production.html">Production</a>
+            <a href="sales.html">Sales</a>
+            <a href="shops.html">Shops</a>
+        </div>
+        <div class="navbar-right">
+            <i class="fas fa-bell"></i>
+            <i class="fas fa-user-circle"></i>
+        </div>
+    </nav>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-            <div class="stat-label">Total Revenue</div>
-            <div class="stat-value" id="total-revenue">$0.00</div>
-            <div class="stat-change">
-                <i class="fas fa-arrow-up"></i> <span id="revenue-change">0%</span> from last month
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <ul class="sidebar-menu">
+            <li><a href="index.html" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="products.html"><i class="fas fa-box"></i> Products</a></li>
+            <li><a href="ingredients.html"><i class="fas fa-leaf"></i> Ingredients</a></li>
+            <li><a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a></li>
+            <li><a href="production.html"><i class="fas fa-industry"></i> Production</a></li>
+            <li><a href="sales.html"><i class="fas fa-chart-bar"></i> Sales</a></li>
+            <li><a href="shops.html"><i class="fas fa-store"></i> Shops</a></li>
+            <li><a href="storage.html"><i class="fas fa-warehouse"></i> Storage</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </h1>
+            <div class="page-actions">
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-calendar"></i> Filter
+                </button>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
-            <div class="stat-label">Total Profit</div>
-            <div class="stat-value" id="total-profit">$0.00</div>
-            <div class="stat-change">
-                <i class="fas fa-arrow-up"></i> <span id="profit-change">0%</span> from last month
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" id="total-revenue">$0.00</div>
+                <div class="stat-change"><i class="fas fa-arrow-up"></i> 12.5% from last month</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="stat-label">Total Profit</div>
+                <div class="stat-value" id="total-profit">$0.00</div>
+                <div class="stat-change"><i class="fas fa-arrow-up"></i> 8.2% from last month</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
+                <div class="stat-label">Products</div>
+                <div class="stat-value" id="total-products">0</div>
+                <div class="stat-change"><i class="fas fa-info-circle"></i> 5 new this week</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-store"></i></div>
+                <div class="stat-label">Active Shops</div>
+                <div class="stat-value" id="total-shops">0</div>
+                <div class="stat-change"><i class="fas fa-shopping-cart"></i> 0 sales today</div>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-box"></i></div>
-            <div class="stat-label">Products</div>
-            <div class="stat-value" id="total-products">0</div>
-            <div class="stat-change">
-                <i class="fas fa-info-circle"></i> <span id="products-in-storage">0</span> in storage
+        <!-- Charts Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-area"></i> Sales Overview</h3>
             </div>
+            <canvas id="salesChart" style="max-height: 400px;"></canvas>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-store"></i></div>
-            <div class="stat-label">Active Shops</div>
-            <div class="stat-value" id="total-shops">0</div>
-            <div class="stat-change">
-                <i class="fas fa-shopping-cart"></i> <span id="today-sales">0</span> sales today
+        <!-- Tables Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Recent Sales</h3>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Shop</th>
+                            <th>Units Sold</th>
+                            <th>Revenue</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026-02-03</td>
+                            <td>Bread</td>
+                            <td>Downtown Shop</td>
+                            <td>50</td>
+                            <td>$500.00</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>2026-02-02</td>
+                            <td>Cake</td>
+                            <td>Central Mall</td>
+                            <td>30</td>
+                            <td>$900.00</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>2026-02-01</td>
+                            <td>Cookies</td>
+                            <td>West End</td>
+                            <td>100</td>
+                            <td>$400.00</td>
+                            <td><span class="badge badge-warning">Pending</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3><i class="fas fa-chart-area"></i> Sales Overview</h3>
-            <select id="chart-period" class="form-control" style="width: auto;" onchange="loadDashboardData()">
-                <option value="7">Last 7 Days</option>
-                <option value="14">Last 14 Days</option>
-                <option value="30">Last 30 Days</option>
-            </select>
-        </div>
-        <div style="height: 400px;">
-            <canvas id="salesChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Tables Section -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-list"></i> Recent Sales</h3>
-        </div>
-        <div class="table-container">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Product</th>
-                    <th>Shop</th>
-                    <th>Units Sold</th>
-                    <th>Revenue</th>
-                    <th>Profit</th>
-                </tr>
-                </thead>
-                <tbody id="recent-sales-tbody">
-                    <!-- Data will be loaded by dashboard.js -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div id="loading" class="loading" style="display: none;">
-    <div class="loading-spinner"></div>
-    <span>Loading Dashboard...</span>
-</div>
-
-<div id="message" class="message" style="display: none;"></div>
-
-<script src="navigation.js"></script>
-<script src="dashboard.js"></script>
-
-<script src="/navigation.js"></script>
-<script src="/app.js"></script>
-<script src="/print-functions.js"></script>
+    <script>
+        // Chart.js example
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [2000, 3000, 2500, 4000, 3500, 5000],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
 </body>
+
 </html>

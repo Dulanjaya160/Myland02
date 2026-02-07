@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Storage - Myland Food Management System</title>
     <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="images/myland-icon.png">
 </head>
+
 <body>
     <div id="navigation" data-current-page="storage"></div>
 
@@ -24,7 +29,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-box"></i></div>
@@ -83,23 +88,24 @@
         </div>
     </div>
 
-        <!-- Loading indicator -->
-        <div id="loading" class="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <span>Loading...</span>
-        </div>
+    <!-- Loading indicator -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <span>Loading...</span>
+    </div>
 
-        <!-- Success/Error messages -->
-        <div id="message" class="message" style="display: none;"></div>
+    <!-- Success/Error messages -->
+    <div id="message" class="message" style="display: none;"></div>
 
     <script src="navigation.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=1.1"></script>
     <script src="print-functions.js"></script>
     <script>
         // Initialize storage page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadStorageSummary();
         });
     </script>
 </body>
+
 </html>

@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products - Myland Food Management System</title>
-
-    <!-- absolute path -->
     <link rel="stylesheet" href="css/professional.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="images/myland-icon.png">
 </head>
+
 <body>
+
+    <!-- Navigation Placeholder -->
     <div id="navigation" data-current-page="products"></div>
 
+    <!-- Main Content -->
     <div class="main-content">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-box"></i> Products
+                <i class="fas fa-box"></i> Product Management
             </h1>
             <div class="page-actions">
                 <button class="btn btn-primary" onclick="showAddProductForm()">
@@ -28,49 +32,52 @@
                 </button>
             </div>
         </div>
-        
-        <div class="card" id="add-product-form" style="display: none;">
+
+        <!-- Add Product Form (Hidden by default) -->
+        <div id="add-product-form" class="card" style="display: none;">
             <div class="card-header">
-                <h3><i class="fas fa-plus-circle"></i> Add New Product</h3>
+                <h3>Add New Product</h3>
             </div>
             <form id="product-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="product-name">Product Name:</label>
-                        <input type="text" id="product-name" name="name" class="form-control" required>
+                        <label for="product-name">Product Name</label>
+                        <input id="product-name" name="name" class="form-control" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="product-price">Base Price:</label>
-                        <input type="number" id="product-price" name="basePrice" class="form-control" step="0.01" required>
+                        <label for="product-price">Base Price</label>
+                        <input id="product-price" name="basePrice" type="number" step="0.01" class="form-control"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="product-selling-price">Selling Price</label>
+                        <input id="product-selling-price" name="sellingPrice" type="number" step="0.01"
+                            class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="product-cost">Product Cost</label>
+                        <input id="product-cost" name="productCost" type="number" step="0.01" class="form-control"
+                            required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="product-selling-price">Selling Price:</label>
-                        <input type="number" id="product-selling-price" name="sellingPrice" class="form-control" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-cost">Product Cost:</label>
-                        <input type="number" id="product-cost" name="productCost" class="form-control" step="0.01" required>
-                    </div>
-                </div>
-                <div class="form-actions" style="margin-top: 1rem;">
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save"></i> Save Product
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="hideAddProductForm()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
+
+                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddProductForm()">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save Product</button>
                 </div>
             </form>
         </div>
 
+        <!-- Products Table -->
         <div class="card">
             <div class="card-header">
-                <h3><i class="fas fa-list"></i> Product List</h3>
+                <h3>Product List</h3>
             </div>
             <div class="table-container">
-                <table class="table" id="products-table">
+                <table id="products-table" class="table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -88,30 +95,37 @@
                 </table>
             </div>
         </div>
-    </div>
 
         <!-- Loading indicator -->
-        <div id="loading" class="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <span>Loading...</span>
+        <div id="loading" class="loading"
+            style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;">
+            <i class="fas fa-spinner fa-spin"></i>
         </div>
 
         <!-- Success/Error messages -->
-        <div id="message" class="message" style="display: none;"></div>
+        <div id="message" class="message"
+            style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 1rem; border-radius: 4px; color: white;">
+        </div>
+    </div>
 
     <script src="navigation.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=1.1"></script>
     <script src="print-functions.js"></script>
     <script>
+        // Helper to show messages (overriding app.js simple showMessage if needed, or relying on it if compatible)
+        // app.js implementation of showMessage might need checking, but for now we assume it manages #message content/display
+
         // Initialize products page
-        document.addEventListener('DOMContentLoaded', function() {
-            loadProducts();
-            setupFormHandlers();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Explicitly load products to ensure data is fetched
+            // This handles cases where app.js auto-initialization might skip or fail
+            if (typeof loadProducts === 'function') {
+                loadProducts();
+            } else {
+                console.error('loadProducts function not found');
+            }
         });
     </script>
-
-    <script src="/navigation.js"></script>
-    <script src="/app.js"></script>
-    <script src="/print-functions.js"></script>
 </body>
+
 </html>

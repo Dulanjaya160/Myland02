@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory - Myland Food Management System</title>
     <link rel="stylesheet" href="css/professional.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="images/myland-icon.png">
 </head>
+
 <body>
     <div id="navigation" data-current-page="inventory"></div>
 
@@ -21,7 +26,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="card" id="add-inventory-form" style="display: none;">
             <div class="card-header">
                 <h3><i class="fas fa-plus-circle"></i> Add/Update Ingredient Inventory</h3>
@@ -46,11 +51,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="inventory-quantity">Quantity:</label>
-                        <input type="number" id="inventory-quantity" name="quantity" class="form-control" step="0.01" min="0" required>
+                        <input type="number" id="inventory-quantity" name="quantity" class="form-control" step="0.01"
+                            min="0" required>
                     </div>
                     <div class="form-group">
                         <label for="inventory-price">Price per Unit:</label>
-                        <input type="number" id="inventory-price" name="pricePerUnit" class="form-control" step="0.01" min="0" required>
+                        <input type="number" id="inventory-price" name="pricePerUnit" class="form-control" step="0.01"
+                            min="0" required>
                     </div>
                 </div>
                 <div class="form-actions" style="margin-top: 1rem;">
@@ -102,24 +109,25 @@
         </div>
     </div>
 
-        <!-- Loading indicator -->
-        <div id="loading" class="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <span>Loading...</span>
-        </div>
+    <!-- Loading indicator -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <span>Loading...</span>
+    </div>
 
-        <!-- Success/Error messages -->
-        <div id="message" class="message" style="display: none;"></div>
+    <!-- Success/Error messages -->
+    <div id="message" class="message" style="display: none;"></div>
 
     <script src="navigation.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=1.1"></script>
     <script src="print-functions.js"></script>
     <script>
         // Initialize inventory page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadInventory();
             setupFormHandlers();
         });
     </script>
 </body>
+
 </html>
