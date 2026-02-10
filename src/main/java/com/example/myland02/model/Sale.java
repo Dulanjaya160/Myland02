@@ -1,4 +1,5 @@
 package com.example.myland02.model;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class Sale {
     private Long id;
 
     @Column(name = "date", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate saleDate;
 
     @ManyToOne

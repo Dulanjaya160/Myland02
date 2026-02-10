@@ -160,8 +160,23 @@ function setupFormHandlers() {
 
 // Product Management
 function showAddProductForm() {
-    document.getElementById('add-product-form').style.display = 'block';
-    document.getElementById('product-form').reset();
+    const form = document.getElementById('product-form');
+    const formContainer = document.getElementById('add-product-form');
+    
+    // Reset form and clear any edit state
+    form.reset();
+    delete form.dataset.editId;
+    
+    // Reset form title
+    const title = document.querySelector('#add-product-form h3');
+    if (title) {
+        title.textContent = 'Add New Product';
+    }
+    
+    // Show the form
+    formContainer.style.display = 'block';
+    
+    console.log('[showAddProductForm] Form reset and ready for new product');
 }
 
 function hideAddProductForm() {
@@ -214,67 +229,29 @@ function handleProductSubmit(e) {
         });
 }
 
-function loadProducts() {
-    showLoading();
-    fetch(`${API_BASE}/products`)
-        .then(response => response.json())
-        .then(data => {
-            products = data;
-            displayProducts(data);
-            hideLoading();
-        })
-        .catch(error => {
-            hideLoading();
-            showMessage('Error loading products: ' + error.message, 'error');
-            // Display empty table if no products endpoint exists
-            displayProducts([]);
-        });
-}
+// function loadProducts() - Removed duplicate definition. Using the robust one at the end of file.
 
-function displayProducts(products) {
-    const tbody = document.getElementById('products-tbody');
-    if (!tbody) return; // Exit if table not found on this page
-    tbody.innerHTML = '';
-
-    if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No products found</td></tr>';
-        return;
-    }
-
-    products.forEach(product => {
-        const profitMargin = product.sellingPrice && product.productCost ?
-            ((product.sellingPrice - product.productCost) / product.sellingPrice * 100) : 0;
-        const profitMarginColor = profitMargin > 0 ? '#28a745' : profitMargin < 0 ? '#dc3545' : '#6c757d';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${product.id}</td>
-            <td>${product.name}</td>
-            <td>$${(product.basePrice || 0).toFixed(2)}</td>
-            <td>$${(product.sellingPrice || 0).toFixed(2)}</td>
-            <td>$${(product.productCost || 0).toFixed(2)}</td>
-            <td style="color: ${profitMarginColor}; font-weight: bold;">
-                ${profitMargin.toFixed(1)}%
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="action-btn btn-warning" onclick="editProduct(${product.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn btn-danger" onclick="deleteProduct(${product.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
+// function displayProducts() - Removed duplicate definition. Using the robust one.
 
 // Ingredient Management
 function showAddIngredientForm() {
-    document.getElementById('add-ingredient-form').style.display = 'block';
-    document.getElementById('ingredient-form').reset();
+    const form = document.getElementById('ingredient-form');
+    const formContainer = document.getElementById('add-ingredient-form');
+    
+    // Reset form and clear any edit state
+    form.reset();
+    delete form.dataset.editId;
+    
+    // Reset form title
+    const title = document.querySelector('#add-ingredient-form h3');
+    if (title) {
+        title.textContent = 'Add New Ingredient';
+    }
+    
+    // Show the form
+    formContainer.style.display = 'block';
+    
+    console.log('[showAddIngredientForm] Form reset and ready for new ingredient');
 }
 
 function hideAddIngredientForm() {
@@ -326,7 +303,10 @@ function handleIngredientSubmit(e) {
             const message = editId ? 'Ingredient updated successfully!' : 'Ingredient added successfully!';
             showMessage(message, 'success');
             hideAddIngredientForm();
-            loadIngredients();
+            // Add small delay to ensure database transaction completes
+            setTimeout(() => {
+                loadIngredients();
+            }, 300);
         })
         .catch(error => {
             hideLoading();
@@ -426,6 +406,10 @@ function showAddProductionForm() {
 }
 
 function addIngredientUsage() {
+    addIngredientRow();
+}
+
+function addIngredientRow(selectedIngredientId = null, quantity = null) {
     const container = document.getElementById('ingredient-usage-container');
     const newItem = document.createElement('div');
     newItem.className = 'ingredient-usage-item';
@@ -443,21 +427,44 @@ function addIngredientUsage() {
 
     // Populate the new dropdown
     const newSelect = newItem.querySelector('.ingredient-select');
+    const quantityInput = newItem.querySelector('.ingredient-quantity');
+
+    if (ingredients && ingredients.length > 0) {
+        populateSingleIngredientDropdown(newSelect, selectedIngredientId);
+    } else {
+        // Fallback or wait for load? usually ingredients are loaded.
+        // If not, we rely on populateIngredientDropdowns called later or logic in showAddProductionForm
+    }
+
+    // Set values if provided (for edit mode)
+    if (selectedIngredientId) {
+        newSelect.value = selectedIngredientId;
+    }
+    if (quantity !== null) {
+        quantityInput.value = quantity;
+    }
+}
+
+function populateSingleIngredientDropdown(selectElement, selectedId = null) {
     ingredients.forEach(ingredient => {
         const option = document.createElement('option');
         option.value = ingredient.id;
 
-        // NEW: Check stock levels
+        // Check stock levels
         const isOutOfStock = (ingredient.quantity || 0) <= 0;
 
-        if (isOutOfStock) {
+        // If we are editing and this is the selected ingredient, don't disable it even if out of stock
+        // (because it was used in this production)
+        const isSelected = selectedId && (ingredient.id == selectedId || ingredient.id === parseInt(selectedId));
+
+        if (isOutOfStock && !isSelected) {
             option.textContent = `${ingredient.name} (Out of Stock)`;
             option.disabled = true;
         } else {
             option.textContent = `${ingredient.name} (Qty: ${ingredient.quantity})`;
         }
 
-        newSelect.appendChild(option);
+        selectElement.appendChild(option);
     });
 }
 
@@ -470,132 +477,193 @@ function removeIngredientUsage(button) {
 
 function populateIngredientDropdowns() {
     const selects = document.querySelectorAll('.ingredient-select');
-    console.log('Populating ingredient dropdowns. Found', selects.length, 'selects');
-    console.log('Available ingredients:', ingredients);
+    // console.log('Populating ingredient dropdowns. Found', selects.length, 'selects');
 
     selects.forEach(select => {
         if (select.children.length === 1) { // Only has default option
-            ingredients.forEach(ingredient => {
-                const option = document.createElement('option');
-                option.value = ingredient.id;
-
-                // NEW: Check stock levels
-                const isOutOfStock = (ingredient.quantity || 0) <= 0;
-
-                if (isOutOfStock) {
-                    option.textContent = `${ingredient.name} (Out of Stock)`;
-                    option.disabled = true;
-                } else {
-                    option.textContent = `${ingredient.name} (Qty: ${ingredient.quantity})`;
-                }
-
-                select.appendChild(option);
-            });
+            populateSingleIngredientDropdown(select);
         }
     });
 }
 
 function hideAddProductionForm() {
     document.getElementById('add-production-form').style.display = 'none';
+    document.getElementById('production-form').reset();
+    document.querySelector('#add-production-form h3').innerHTML = '<i class="fas fa-plus-circle"></i> Record Production';
+    delete document.getElementById('production-form').dataset.editId;
 }
 
 function handleProductionSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const productId = formData.get('product');
-    const product = products.find(p => p.id == productId);
 
-    // Collect ingredient usage data
+    const productionData = {
+        product: { id: parseInt(formData.get('product')) },
+        date: formData.get('date'),
+        producedUnits: parseFloat(formData.get('producedUnits')),
+        usedIngredients: []
+    };
+
+    const editId = e.target.dataset.editId;
+    if (editId) {
+        productionData.id = parseInt(editId);
+    }
+
     const ingredientIds = formData.getAll('ingredientIds[]');
     const ingredientQuantities = formData.getAll('ingredientQuantities[]');
-    const usedIngredients = [];
 
     for (let i = 0; i < ingredientIds.length; i++) {
         if (ingredientIds[i] && ingredientQuantities[i]) {
-            usedIngredients.push({
+            productionData.usedIngredients.push({
                 ingredientId: parseInt(ingredientIds[i]),
                 quantityUsed: parseFloat(ingredientQuantities[i])
             });
         }
     }
 
-    // Validate ingredient availability before submitting
-    for (let usedIng of usedIngredients) {
-        const ingredient = ingredients.find(ing => ing.id === usedIng.ingredientId);
-        if (ingredient) {
-            if (ingredient.quantity < usedIng.quantityUsed) {
-                showMessage(
-                    `Insufficient stock for ingredient '${ingredient.name}'. ` +
-                    `Required: ${usedIng.quantityUsed}, Available: ${ingredient.quantity}`,
-                    'error'
-                );
-                return; // Stop submission
-            }
-        }
-    }
-
-    const production = {
-        product: product,
-        date: formData.get('date'),
-        producedUnits: parseInt(formData.get('producedUnits')),
-        usedIngredients: usedIngredients
-    };
-
-    if (production.producedUnits <= 0) {
+    // Validate produced units
+    if (productionData.producedUnits <= 0) {
         showMessage('Produced units must be greater than 0', 'error');
         return;
     }
 
-    // Debug: Log the production object to see what's being sent
-    console.log('=== FRONTEND PRODUCTION DATA ===');
-    console.log('Product:', product);
-    console.log('Used ingredients:', usedIngredients);
-    console.log('Production object:', JSON.stringify(production, null, 2));
-    console.log('=== END FRONTEND DEBUG ===');
+    // Validate ingredient availability before submitting (only for new production or if quantities changed)
+    // This validation is more complex for edits, as original quantities need to be considered.
+    // For simplicity, we'll validate against current stock for all submissions.
+    // A more robust solution would involve sending original quantities for edits to the backend.
+    if (!editId) { // Only validate stock for new production
+        for (let usedIng of productionData.usedIngredients) {
+            const ingredient = ingredients.find(ing => ing.id === usedIng.ingredientId);
+            if (ingredient) {
+                if (ingredient.quantity < usedIng.quantityUsed) {
+                    showMessage(
+                        `Insufficient stock for ingredient '${ingredient.name}'. ` +
+                        `Required: ${usedIng.quantityUsed}, Available: ${ingredient.quantity}`,
+                        'error'
+                    );
+                    return; // Stop submission
+                }
+            }
+        }
+    }
+
+
+    const url = editId ? `${API_BASE}/production` : `${API_BASE}/production`;
 
     showLoading();
-    fetch(`${API_BASE}/production`, {
+    fetch(url, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         },
-        body: JSON.stringify(production)
+        body: JSON.stringify(productionData)
     })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.message || 'Failed to record production');
-                });
-            }
+            if (!response.ok) throw new Error('Failed to save production');
             return response.json();
         })
         .then(data => {
             hideLoading();
-            showMessage('Production recorded successfully! Ingredients have been reduced from inventory.', 'success');
+            showMessage(editId ? 'Production updated successfully' : 'Production recorded successfully', 'success');
             hideAddProductionForm();
-            loadProduction();
-            loadIngredients(); // Refresh ingredients to show updated quantities
-            // Refresh inventory if we're on the inventory tab
-            if (currentTab === 'inventory') {
-                loadInventory();
-            }
+            // Add small delay to ensure database transaction completes
+            setTimeout(() => {
+                loadProduction();
+                loadIngredients(); // Reload ingredients as stock changed
+            }, 300);
         })
         .catch(error => {
             hideLoading();
-            showMessage('Error recording production: ' + error.message, 'error');
+            showMessage('Error saving production: ' + error.message, 'error');
         });
 }
 
+function editProduction(id) {
+    // production global variable holds the list
+    const prod = production.find(p => p.id === id);
+    if (!prod) {
+        showMessage('Production record not found', 'error');
+        return;
+    }
+
+    showAddProductionForm();
+
+    document.querySelector('#add-production-form h3').innerHTML = '<i class="fas fa-edit"></i> Edit Production';
+    const form = document.getElementById('production-form');
+    form.dataset.editId = id;
+
+    // Populate fields
+    document.getElementById('production-product').value = prod.product ? prod.product.id : '';
+    document.getElementById('production-date').value = prod.date;
+    document.getElementById('production-units').value = prod.producedUnits;
+
+    // Populate ingredients
+    const container = document.getElementById('ingredient-usage-container');
+    container.innerHTML = ''; // Clear default empty row
+
+    if (prod.usedIngredients && prod.usedIngredients.length > 0) {
+        prod.usedIngredients.forEach(usage => {
+            const ingId = usage.ingredient ? usage.ingredient.id : usage.ingredientId;
+            addIngredientRow(ingId, usage.quantity);
+        });
+    } else {
+        addIngredientRow(); // Add one empty if none
+    }
+}
+
+function deleteProduction(id) {
+    if (confirm('Are you sure you want to delete this production record?')) {
+        showLoading();
+        fetch(`${API_BASE}/production/${id}`, {
+            method: 'DELETE'
+        })
+            .then(() => {
+                hideLoading();
+                showMessage('Production record deleted successfully!', 'success');
+                // Reset form if it was in edit mode for this production
+                const form = document.getElementById('production-form');
+                if (form && form.dataset.editId == id) {
+                    hideAddProductionForm();
+                }
+                loadProduction();
+                loadIngredients();
+            })
+            .catch(error => {
+                hideLoading();
+                showMessage('Error deleting production: ' + error.message, 'error');
+            });
+    }
+}
+
 function loadProduction() {
+    console.log('[loadProduction] Starting to load production data...');
     showLoading();
     fetch(`${API_BASE}/production`)
-        .then(response => response.json())
+        .then(response => {
+            console.log('[loadProduction] Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            production = data;
-            displayProduction(data);
+            console.log('[loadProduction] Received data:', data);
+            console.log('[loadProduction] Data type:', typeof data, 'Is array:', Array.isArray(data));
+            
+            if (Array.isArray(data)) {
+                production = data;
+                console.log('[loadProduction] Stored', production.length, 'production records');
+                displayProduction(data);
+            } else {
+                console.error('[loadProduction] Expected array for production but got:', data);
+                production = [];
+                displayProduction([]);
+                showMessage('Error: Invalid production data received', 'error');
+            }
             hideLoading();
         })
         .catch(error => {
+            console.error('[loadProduction] Error:', error);
             hideLoading();
             showMessage('Error loading production: ' + error.message, 'error');
             displayProduction([]);
@@ -603,16 +671,23 @@ function loadProduction() {
 }
 
 function displayProduction(production) {
+    console.log('[displayProduction] Displaying', production.length, 'records');
     const tbody = document.getElementById('production-tbody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('[displayProduction] Table body element not found!');
+        return;
+    }
     tbody.innerHTML = '';
 
     if (production.length === 0) {
+        console.log('[displayProduction] No production records to display');
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">No production records found</td></tr>';
         return;
     }
 
-    production.forEach(record => {
+    production.forEach((record, index) => {
+        console.log(`[displayProduction] Processing record ${index + 1}:`, record);
+        
         // Format used ingredients
         let ingredientsText = 'None';
         if (record.usedIngredients && record.usedIngredients.length > 0) {
@@ -643,6 +718,8 @@ function displayProduction(production) {
         `;
         tbody.appendChild(row);
     });
+    
+    console.log('[displayProduction] Successfully displayed all records');
 }
 
 // Sales Management
@@ -652,13 +729,24 @@ function showAddSaleForm() {
     setCurrentDate('sale-date');
 
     // Load shops first, then populate dropdown
-    if (shops.length === 0) {
-        loadShops().then(() => {
-            loadShopsForSelect('sale-shop');
-        });
-    } else {
+    // Load all necessary data for validation
+    showLoading();
+    Promise.all([
+        loadShops(),
+        fetch(`${API_BASE}/production`).then(r => r.json().catch(() => [])),
+        fetch(`${API_BASE}/sales`).then(r => r.json().catch(() => []))
+    ]).then(([shopsData, productionData, salesData]) => {
+        // Update globals
+        production = Array.isArray(productionData) ? productionData : [];
+        sales = Array.isArray(salesData) ? salesData : [];
+
         loadShopsForSelect('sale-shop');
-    }
+        loadProductsForSelect('sale-product'); // Ensure products are loaded for dropdown
+        hideLoading();
+    }).catch(err => {
+        console.error("Error loading data for sale form:", err);
+        hideLoading();
+    });
 
     // Add event listeners for real-time calculation
     document.getElementById('sale-product').addEventListener('change', calculateSaleValues);
@@ -670,13 +758,90 @@ function calculateSaleValues() {
     const unitsInput = document.getElementById('sale-units');
     const incomeDisplay = document.getElementById('calculated-income');
     const profitDisplay = document.getElementById('calculated-profit');
+    const submitBtn = document.querySelector('#sale-form button[type="submit"]');
+
+    // Create or get stock display element
+    let stockDisplay = document.getElementById('stock-display');
+    if (!stockDisplay) {
+        stockDisplay = document.createElement('div');
+        stockDisplay.id = 'stock-display';
+        stockDisplay.style.fontSize = '0.9rem';
+        stockDisplay.style.marginTop = '5px';
+        unitsInput.parentNode.appendChild(stockDisplay);
+    }
 
     const selectedProductId = productSelect.value;
     const soldUnits = parseInt(unitsInput.value) || 0;
 
-    if (selectedProductId && soldUnits > 0) {
+    if (selectedProductId) {
         const product = products.find(p => p.id == selectedProductId);
-        if (product) {
+
+        // Calculate stock if data is available
+        // Note: production and sales arrays are global
+        let totalProduced = 0;
+        let totalSold = 0;
+
+        if (typeof production !== 'undefined') {
+            production.forEach(p => {
+                if (p.product && p.product.id == selectedProductId) {
+                    totalProduced += (p.producedUnits || 0);
+                }
+            });
+        }
+
+        if (typeof sales !== 'undefined') {
+            sales.forEach(s => {
+                if (s.product && s.product.id == selectedProductId) {
+                    // Check if we are editing this specific sale, if so, don't count it as "sold" yet
+                    const editId = document.getElementById('sale-form').dataset.editId;
+                    if (editId && s.id == editId) return;
+
+                    totalSold += (s.soldUnits || 0);
+                }
+            });
+        }
+
+        const availableStock = totalProduced - totalSold;
+
+        // Debug logging
+        console.log(`[SalesValidation] Product: ${product ? product.name : 'Unknown'} (ID: ${selectedProductId})`);
+        console.log(`[SalesValidation] Produced: ${totalProduced}, Sold: ${totalSold}, Available: ${availableStock}`);
+
+        // Update stock display and validation
+        if (availableStock <= 0) {
+            stockDisplay.textContent = `Out of Stock (Available: ${availableStock})`;
+            stockDisplay.style.color = '#dc3545';
+            unitsInput.max = 0;
+            if (submitBtn) submitBtn.disabled = true;
+        } else {
+            // Set max attribute for browser validation
+            unitsInput.max = availableStock;
+
+            if (availableStock < 10) {
+                stockDisplay.textContent = `Low Stock: ${availableStock} units available`;
+                stockDisplay.style.color = '#ffc107';
+            } else {
+                stockDisplay.textContent = `In Stock: ${availableStock} units available`;
+                stockDisplay.style.color = '#28a745';
+            }
+        }
+
+        // Validation styling and logic
+        if (soldUnits > availableStock) {
+            unitsInput.style.borderColor = '#dc3545';
+            stockDisplay.textContent += ' - Insufficient Stock!';
+            stockDisplay.style.color = '#dc3545';
+            if (submitBtn) submitBtn.disabled = true;
+        } else if (soldUnits <= 0 && unitsInput.value !== '') {
+            // Invalid if negative or zero (but allow empty while typing)
+            if (submitBtn) submitBtn.disabled = true;
+        } else {
+            unitsInput.style.borderColor = ''; // Reset
+            // Only re-enable if stock is available
+            if (submitBtn) submitBtn.disabled = availableStock <= 0;
+        }
+
+        if (product && soldUnits > 0) {
             const sellingPrice = product.sellingPrice || 0;
             const productCost = product.productCost || 0;
 
@@ -689,8 +854,18 @@ function calculateSaleValues() {
             // Add styling classes
             incomeDisplay.className = 'calculated-value income';
             profitDisplay.className = 'calculated-value profit';
+        } else {
+            incomeDisplay.textContent = '$0.00';
+            profitDisplay.textContent = '$0.00';
+            incomeDisplay.className = 'calculated-value';
+            profitDisplay.className = 'calculated-value';
         }
     } else {
+        stockDisplay.textContent = '';
+        unitsInput.style.borderColor = '';
+        unitsInput.removeAttribute('max');
+        if (submitBtn) submitBtn.disabled = false;
+
         incomeDisplay.textContent = '$0.00';
         profitDisplay.textContent = '$0.00';
         incomeDisplay.className = 'calculated-value';
@@ -810,21 +985,24 @@ function performSaleSubmission(sale, editId) {
             const message = editId ? 'Sale updated successfully!' : 'Sale recorded successfully!';
             showMessage(message, 'success');
             hideAddSaleForm();
-            loadSales();
-
-            // Show print bill option for new sales (not edits)
-            if (!editId) {
-                if (confirm('Sale recorded successfully! Do you want to print the bill?')) {
-                    printSaleBill(data, sale.product, sale.shop);
+            
+            // Add small delay to ensure database transaction completes
+            setTimeout(() => {
+                loadSales();
+                
+                // Show print bill option for new sales (not edits)
+                if (!editId) {
+                    if (confirm('Sale recorded successfully! Do you want to print the bill?')) {
+                        printSaleBill(data, sale.product, sale.shop);
+                    }
                 }
-            }
 
-            // Refresh reports if we're on the sales tab
-            // Refresh reports if we're on the sales tab
-            if (currentTab === 'sales') {
-                generateMonthlyReport();
-                generateDailyReport();
-            }
+                // Refresh reports if we're on the sales tab
+                if (currentTab === 'sales') {
+                    generateMonthlyReport();
+                    generateDailyReport();
+                }
+            }, 300);
         })
         .catch(error => {
             hideLoading();
@@ -838,8 +1016,16 @@ function loadSales() {
         .then(response => response.json())
         .then(data => {
             console.log('Loaded sales data:', data);
-            sales = data;
-            displaySales(data);
+            console.log('Loaded sales data:', data);
+            if (Array.isArray(data)) {
+                sales = data;
+                displaySales(data);
+            } else {
+                console.error('Expected array for sales but got:', data);
+                sales = [];
+                displaySales([]);
+                showMessage('Error: Invalid sales data received', 'error');
+            }
             hideLoading();
         })
         .catch(error => {
@@ -990,6 +1176,7 @@ function calculateIngredientStorage(ingredients, production) {
 
 function displayProductStorageSummary(storageData) {
     const summary = document.getElementById('products-storage-summary');
+    if (!summary) return;
     const totalProducts = Object.keys(storageData).length;
     const totalProduced = Object.values(storageData).reduce((sum, item) => sum + item.produced, 0);
     const totalSold = Object.values(storageData).reduce((sum, item) => sum + item.sold, 0);
@@ -1017,6 +1204,7 @@ function displayProductStorageSummary(storageData) {
 
 function displayIngredientStorageSummary(storageData) {
     const summary = document.getElementById('ingredients-storage-summary');
+    if (!summary) return;
     const totalIngredients = Object.keys(storageData).length;
     const totalUsed = Object.values(storageData).reduce((sum, item) => sum + item.used, 0);
 
@@ -1038,6 +1226,7 @@ function displayIngredientStorageSummary(storageData) {
 
 function displayProductStorageTable(storageData) {
     const tbody = document.getElementById('storage-products-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     Object.values(storageData).forEach(item => {
@@ -1056,6 +1245,7 @@ function displayProductStorageTable(storageData) {
 
 function displayIngredientStorageTable(storageData) {
     const tbody = document.getElementById('storage-ingredients-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     Object.values(storageData).forEach(item => {
@@ -1096,10 +1286,16 @@ function loadInventory() {
     fetch(`${API_BASE}/ingredients`)
         .then(response => response.json())
         .then(data => {
-            ingredients = data;
-            displayInventory(data);
-            populateInventoryIngredientSelect();
-            calculateInventorySummary(data);
+            if (Array.isArray(data)) {
+                ingredients = data;
+                displayInventory(data);
+                populateInventoryIngredientSelect();
+                calculateInventorySummary(data);
+            } else {
+                console.error('Expected array for inventory but got:', data);
+                displayInventory([]);
+                showMessage('Error: Invalid inventory data received', 'error');
+            }
             hideLoading();
         })
         .catch(error => {
@@ -1111,26 +1307,53 @@ function loadInventory() {
 
 // Dashboard Management
 function loadDashboardData() {
+    console.log("Starting loadDashboardData...");
     // showLoading(); // Optional: might clash with initial load, but good for feedback
 
     Promise.all([
-        fetch(`${API_BASE}/sales`).then(r => r.json()).catch(err => { console.error("Sales fetch failed", err); return []; }),
-        fetch(`${API_BASE}/products`).then(r => r.json()).catch(err => { console.error("Products fetch failed", err); return []; }),
-        fetch(`${API_BASE}/shops`).then(r => r.json()).catch(err => { console.error("Shops fetch failed", err); return []; })
+        fetch(`${API_BASE}/sales`).then(r => {
+            if (!r.ok) throw new Error(`Sales fetch failed: ${r.status}`);
+            return r.json();
+        }).catch(err => { console.error("Sales fetch error:", err); return []; }),
+
+        fetch(`${API_BASE}/products`).then(r => {
+            if (!r.ok) throw new Error(`Products fetch failed: ${r.status}`);
+            return r.json();
+        }).catch(err => { console.error("Products fetch error:", err); return []; }),
+
+        fetch(`${API_BASE}/shops`).then(r => {
+            if (!r.ok) throw new Error(`Shops fetch failed: ${r.status}`);
+            return r.json();
+        }).catch(err => { console.error("Shops fetch error:", err); return []; })
     ]).then(([salesData, productsData, shopsData]) => {
 
         // Populate global state
-        sales = salesData;
-        products = productsData;
-        shops = shopsData;
+        sales = Array.isArray(salesData) ? salesData : [];
+        products = Array.isArray(productsData) ? productsData : [];
+        shops = Array.isArray(shopsData) ? shopsData : [];
 
-        console.log("Dashboard state populated:", { sales: sales.length, products: products.length, shops: shops.length });
+        console.log("Dashboard state populated:", {
+            salesCount: sales.length,
+            productsCount: products.length,
+            shopsCount: shops.length
+        });
 
-        // Calculate Totals
-        const totalRevenue = sales.reduce((sum, sale) => sum + (sale.totalIncome || 0), 0);
-        const totalProfit = sales.reduce((sum, sale) => sum + (sale.totalProfit || 0), 0);
+        // Calculate Totals safely
+        let totalRevenue = 0;
+        let totalProfit = 0;
+
+        sales.forEach(sale => {
+            // Handle potential nulls or strings
+            const income = parseFloat(sale.totalIncome) || 0;
+            const profit = parseFloat(sale.totalProfit) || 0;
+            totalRevenue += income;
+            totalProfit += profit;
+        });
+
         const totalProducts = products.length;
         const totalShops = shops.length;
+
+        console.log("Calculated Totals:", { totalRevenue, totalProfit, totalProducts, totalShops });
 
         // Update DOM
         const revenueEl = document.getElementById('total-revenue');
@@ -1139,18 +1362,34 @@ function loadDashboardData() {
         const shopsEl = document.getElementById('total-shops');
 
         if (revenueEl) revenueEl.textContent = `$${totalRevenue.toFixed(2)}`;
+        else console.warn("Element #total-revenue not found");
+
         if (profitEl) profitEl.textContent = `$${totalProfit.toFixed(2)}`;
+        else console.warn("Element #total-profit not found");
+
         if (productsEl) productsEl.textContent = totalProducts;
+        else console.warn("Element #total-products not found");
+
         if (shopsEl) shopsEl.textContent = totalShops;
+        else console.warn("Element #total-shops not found");
 
         // Update Recent Sales Table
-        updateRecentSalesTable(sales);
+        try {
+            updateRecentSalesTable(sales);
+        } catch (e) {
+            console.error("Error updating recent sales table:", e);
+        }
 
         // Update Chart
-        updateDashboardChart(sales);
+        try {
+            updateDashboardChart(sales);
+        } catch (e) {
+            console.error("Error updating dashboard chart:", e);
+        }
 
     }).catch(err => {
         console.error("Critical error loading dashboard data:", err);
+        showMessage("Failed to load dashboard data. Check console for details.", "error");
     });
 }
 
@@ -1291,7 +1530,10 @@ function handleInventorySubmit(e) {
             hideLoading();
             showMessage('Inventory updated successfully!', 'success');
             hideAddInventoryForm();
-            loadInventory();
+            // Add small delay to ensure database transaction completes
+            setTimeout(() => {
+                loadInventory();
+            }, 300);
         })
         .catch(error => {
             hideLoading();
@@ -1301,6 +1543,7 @@ function handleInventorySubmit(e) {
 
 function displayInventory(ingredients) {
     const tbody = document.getElementById('inventory-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     if (ingredients.length === 0) {
@@ -1423,8 +1666,13 @@ function loadProductsForSelect(selectId) {
         fetch(`${API_BASE}/products`)
             .then(response => response.json())
             .then(data => {
-                products = data;
-                populate();
+                if (Array.isArray(data)) {
+                    products = data;
+                    populate();
+                } else {
+                    console.error('Expected array of products but got:', data);
+                    select.innerHTML = '<option value="">Error: Invalid data format</option>';
+                }
             })
             .catch(error => {
                 console.error('Error loading products for select:', error);
@@ -1436,14 +1684,20 @@ function loadProductsForSelect(selectId) {
 
 function loadShopsForSelect(selectId) {
     const select = document.getElementById(selectId);
+    if (!select) return;
     select.innerHTML = '<option value="">Select a shop</option>';
 
-    shops.forEach(shop => {
-        const option = document.createElement('option');
-        option.value = shop.id;
-        option.textContent = shop.name;
-        select.appendChild(option);
-    });
+    if (Array.isArray(shops)) {
+        shops.forEach(shop => {
+            const option = document.createElement('option');
+            option.value = shop.id;
+            option.textContent = shop.name;
+            select.appendChild(option);
+        });
+    } else {
+        console.error('Expected array for shops but got:', shops);
+        select.innerHTML = '<option value="">Error loading shops</option>';
+    }
 }
 
 function setCurrentDate(inputId = null) {
@@ -1513,6 +1767,11 @@ function deleteProduct(id) {
             .then(() => {
                 hideLoading();
                 showMessage('Product deleted successfully!', 'success');
+                // Reset form if it was in edit mode for this product
+                const form = document.getElementById('product-form');
+                if (form && form.dataset.editId == id) {
+                    hideAddProductForm();
+                }
                 loadProducts();
             })
             .catch(error => {
@@ -1548,6 +1807,11 @@ function deleteIngredient(id) {
             .then(() => {
                 hideLoading();
                 showMessage('Ingredient deleted successfully!', 'success');
+                // Reset form if it was in edit mode for this ingredient
+                const form = document.getElementById('ingredient-form');
+                if (form && form.dataset.editId == id) {
+                    hideAddIngredientForm();
+                }
                 loadIngredients();
             })
             .catch(error => {
@@ -1557,27 +1821,6 @@ function deleteIngredient(id) {
     }
 }
 
-function editProduction(id) {
-    showMessage('Production edit functionality coming soon!', 'info');
-}
-
-function deleteProduction(id) {
-    if (confirm('Are you sure you want to delete this production record?')) {
-        showLoading();
-        fetch(`${API_BASE}/production/${id}`, {
-            method: 'DELETE'
-        })
-            .then(() => {
-                hideLoading();
-                showMessage('Production record deleted successfully!', 'success');
-                loadProduction();
-            })
-            .catch(error => {
-                hideLoading();
-                showMessage('Error deleting production: ' + error.message, 'error');
-            });
-    }
-}
 
 function editSale(id) {
     const sale = sales.find(s => s.id === id);
@@ -1695,7 +1938,10 @@ function handleShopSubmit(e) {
             const message = editId ? 'Shop updated successfully!' : 'Shop added successfully!';
             showMessage(message, 'success');
             hideAddShopForm();
-            loadShops(); // Reload list
+            // Add small delay to ensure database transaction completes
+            setTimeout(() => {
+                loadShops(); // Reload list
+            }, 300);
         })
         .catch(error => {
             hideLoading();
@@ -2144,7 +2390,10 @@ function handleProductSubmit(e) {
             const message = editId ? 'Product updated successfully!' : 'Product added successfully!';
             showMessage(message, 'success');
             hideAddProductForm();
-            loadProducts();
+            // Add small delay to ensure database transaction completes
+            setTimeout(() => {
+                loadProducts();
+            }, 300);
         })
         .catch(error => {
             hideLoading();
@@ -2181,4 +2430,48 @@ function loadProducts() {
             showMessage('Error loading products: ' + error.message, 'error');
             displayProducts([]); // show empty table
         });
+}
+
+// Robust displayProducts
+function displayProducts(products) {
+    const tbody = document.getElementById('products-tbody');
+    if (!tbody) {
+        console.warn('displayProducts: products-tbody not found');
+        return;
+    }
+    tbody.innerHTML = '';
+
+    if (!products || products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No products found</td></tr>';
+        return;
+    }
+
+    products.forEach(product => {
+        const profitMargin = product.sellingPrice && product.productCost ?
+            ((product.sellingPrice - product.productCost) / product.sellingPrice * 100) : 0;
+        const profitMarginColor = profitMargin > 0 ? '#28a745' : profitMargin < 0 ? '#dc3545' : '#6c757d';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.id}</td>
+            <td>${product.name}</td>
+            <td>$${(product.basePrice || 0).toFixed(2)}</td>
+            <td>$${(product.sellingPrice || 0).toFixed(2)}</td>
+            <td>$${(product.productCost || 0).toFixed(2)}</td>
+            <td style="color: ${profitMarginColor}; font-weight: bold;">
+                ${profitMargin.toFixed(1)}%
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn btn-warning" onclick="editProduct(${product.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn btn-danger" onclick="deleteProduct(${product.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 }

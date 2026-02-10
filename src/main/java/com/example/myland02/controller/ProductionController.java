@@ -37,15 +37,26 @@ public class ProductionController {
     public ResponseEntity<?> recordProduction(@RequestBody ProductionRequest request) {
         try {
             System.out.println("DEBUG: Received production request");
+            System.out.println("DEBUG: Product ID: " + (request.getProduct() != null ? request.getProduct().getId() : "null"));
+            System.out.println("DEBUG: Date: " + request.getDate());
+            System.out.println("DEBUG: Produced Units: " + request.getProducedUnits());
+            System.out.println("DEBUG: Used Ingredients count: " + (request.getUsedIngredients() != null ? request.getUsedIngredients().size() : 0));
 
             // Validate product
             if (request.getProduct() == null || request.getProduct().getId() == null) {
+                System.err.println("ERROR: Product is null or has no ID");
                 return ResponseEntity.badRequest().body("Product is required");
             }
 
+            // Fetch the product from database to ensure it exists
+            Product product = productRepo.findById(request.getProduct().getId())
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + request.getProduct().getId()));
+            
+            System.out.println("DEBUG: Found product: " + product.getName());
+
             // Create Production entity
             Production production = new Production();
-            production.setProduct(request.getProduct());
+            production.setProduct(product);
             production.setDate(request.getDate());
             production.setProducedUnits(request.getProducedUnits());
             production.setUsedIngredients(new ArrayList<>());
@@ -53,12 +64,15 @@ public class ProductionController {
             // Process ingredients
             if (request.getUsedIngredients() != null) {
                 for (ProductionIngredientRequest ingReq : request.getUsedIngredients()) {
+                    System.out.println("DEBUG: Processing ingredient ID: " + ingReq.getIngredientId() + ", Quantity: " + ingReq.getQuantityUsed());
+                    
                     Ingredient ingredient = ingredientRepo.findById(ingReq.getIngredientId())
                             .orElseThrow(
                                     () -> new RuntimeException("Ingredient not found: " + ingReq.getIngredientId()));
 
                     // Check stock
                     if (ingredient.getQuantity() < ingReq.getQuantityUsed()) {
+                        System.err.println("ERROR: Insufficient stock for " + ingredient.getName());
                         return ResponseEntity.badRequest()
                                 .body("Insufficient stock for ingredient: " + ingredient.getName());
                     }
@@ -66,7 +80,7 @@ public class ProductionController {
                     // Deduct stock
                     ingredient.setQuantity(ingredient.getQuantity() - ingReq.getQuantityUsed());
                     ingredientRepo.save(ingredient);
-                    System.out.println("DEBUG: Updated stock for " + ingredient.getName());
+                    System.out.println("DEBUG: Updated stock for " + ingredient.getName() + " to " + ingredient.getQuantity());
 
                     // Create link
                     ProductionIngredient pi = new ProductionIngredient();
@@ -78,6 +92,7 @@ public class ProductionController {
                 }
             }
 
+            System.out.println("DEBUG: Saving production record...");
             Production saved = prodRepo.save(production);
             System.out.println("✓ Production saved with ID: " + saved.getId());
             return ResponseEntity.ok(saved);

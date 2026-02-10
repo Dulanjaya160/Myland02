@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myland-v1';
+const CACHE_NAME = 'myland-v4';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -44,9 +44,13 @@ self.addEventListener('activate', event => {
 
 // Fetch Event - Serve from Cache or Network
 self.addEventListener('fetch', event => {
-    // API requests: Network only (or Network first)
+    // API requests: Network ONLY, never cache
     if (event.request.url.includes('/api/')) {
-        event.respondWith(fetch(event.request));
+        event.respondWith(
+            fetch(event.request, {
+                cache: 'no-store'  // Never cache API responses
+            })
+        );
         return;
     }
 
@@ -57,7 +61,18 @@ self.addEventListener('fetch', event => {
                 if (response) {
                     return response;
                 }
-                return fetch(event.request);
+                // Fetch with redirect mode set to 'follow' to handle redirects
+                return fetch(event.request, { redirect: 'follow' })
+                    .then(fetchResponse => {
+                        // Cache the response if it's valid
+                        if (fetchResponse && fetchResponse.status === 200) {
+                            const responseToCache = fetchResponse.clone();
+                            caches.open(CACHE_NAME).then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        }
+                        return fetchResponse;
+                    });
             })
     );
 });

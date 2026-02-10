@@ -39,7 +39,7 @@ public class MylandController {
         } catch (Exception e) {
             System.err.println("✗ Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving product: " + e.getMessage());
+                    .body(java.util.Map.of("error", "Error saving product: " + e.getMessage()));
         }
     }
 
@@ -48,7 +48,8 @@ public class MylandController {
         try {
             return ResponseEntity.ok(productRepo.findAll());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error loading products: " + e.getMessage()));
         }
     }
 
@@ -59,7 +60,8 @@ public class MylandController {
             productRepo.deleteById(id);
             return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error deleting product: " + e.getMessage()));
         }
     }
 
@@ -80,7 +82,8 @@ public class MylandController {
             System.out.println("✓ Shop saved with ID: " + saved.getId());
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error saving shop: " + e.getMessage()));
         }
     }
 
@@ -96,7 +99,8 @@ public class MylandController {
             shopRepo.deleteById(id);
             return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error deleting shop: " + e.getMessage()));
         }
     }
 
@@ -110,7 +114,7 @@ public class MylandController {
         try {
             // Fetch validation and price data from Product
             if (sale.getProduct() == null || sale.getProduct().getId() == null) {
-                return ResponseEntity.badRequest().body("Product ID is required");
+                return ResponseEntity.badRequest().body(java.util.Map.of("error", "Product ID is required"));
             }
 
             Product product = productRepo.findById(sale.getProduct().getId())
@@ -141,7 +145,8 @@ public class MylandController {
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             e.printStackTrace(); // Log the error for debugging
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error recording sale: " + e.getMessage()));
         }
     }
 
@@ -157,7 +162,8 @@ public class MylandController {
             saleRepo.deleteById(id);
             return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error deleting sale: " + e.getMessage()));
         }
     }
 }
