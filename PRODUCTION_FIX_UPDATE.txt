@@ -1,0 +1,117 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    PRODUCTION PAGE FIX - UPDATE READY                        ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+ISSUE FIXED:
+════════════
+✓ Production page error: "Error saving production: Failed to save production"
+✓ Root cause: Frontend was sending wrong field names to backend
+✓ Fixed: Changed from {ingredient: {id}, quantity} to {ingredientId, quantityUsed}
+
+
+NEW INSTALLER LOCATION:
+═══════════════════════
+electron\dist\Myland Food Management-Setup-1.0.0.exe
+Size: 153 MB
+Created: Just now (1:17 AM)
+
+
+QUICK UPDATE STEPS:
+═══════════════════
+
+Option 1: Update Without Reinstalling (Fastest)
+────────────────────────────────────────────────
+If you're running from development mode:
+1. Close the application
+2. The fix is already applied
+3. Restart the application
+4. Test the production page
+
+
+Option 2: Update Installed Version
+───────────────────────────────────
+If you installed the application:
+
+Step 1: Close the application
+
+Step 2: Uninstall current version
+   - Windows Settings → Apps → Myland Food Management → Uninstall
+
+Step 3: Install new version
+   - Run: electron\dist\Myland Food Management-Setup-1.0.0.exe
+   - Follow installation wizard
+
+Step 4: Test
+   - Open the application
+   - Go to Production page
+   - Try adding a production record
+   - Should work without errors!
+
+
+WHAT WAS CHANGED:
+═════════════════
+
+File: src/main/resources/static/app.js
+Function: handleProductionSubmit()
+
+Before (Wrong):
+───────────────
+usedIngredients: [{
+    ingredient: { id: parseInt(ingredientIds[i]) },
+    quantity: parseFloat(ingredientQuantities[i])
+}]
+
+After (Correct):
+────────────────
+usedIngredients: [{
+    ingredientId: parseInt(ingredientIds[i]),
+    quantityUsed: parseFloat(ingredientQuantities[i])
+}]
+
+This matches what the backend expects (ProductionIngredientRequest DTO).
+
+
+TESTING THE FIX:
+════════════════
+
+1. Open the application
+2. Navigate to Production page
+3. Click "Record Production"
+4. Select a product
+5. Enter date and units
+6. Add ingredients used
+7. Click "Record Production"
+8. Should see: "Production recorded successfully" ✓
+
+
+NO DATA LOSS:
+═════════════
+✓ Your existing data is safe
+✓ No need to delete database
+✓ All previous records remain intact
+
+
+TECHNICAL DETAILS:
+══════════════════
+
+The backend ProductionController expects:
+- ProductionRequest with usedIngredients array
+- Each item should be ProductionIngredientRequest with:
+  * ingredientId (Long)
+  * quantityUsed (double)
+
+The frontend was incorrectly sending:
+- ingredient: { id: ... }
+- quantity: ...
+
+This caused the backend to receive null values, triggering:
+"IllegalArgumentException: The given id must not be null"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                    READY TO UPDATE? CHOOSE YOUR OPTION ABOVE!
+
+═══════════════════════════════════════════════════════════════════════════════

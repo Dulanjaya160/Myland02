@@ -54,12 +54,21 @@
                             <option value="">Select a shop</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="sale-units">Sold Units:</label>
                         <input type="number" id="sale-units" name="soldUnits" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="sale-returns">Returned Units (Expired):</label>
+                        <label for="sale-selling-price">Selling Price ($):</label>
+                        <input type="number" id="sale-selling-price" name="sellingPrice" step="0.01" min="0"
+                            class="form-control font-bold" style="border-color: var(--secondary);" required>
+                        <small style="color: var(--secondary); margin-top: 4px; display: block;">Enter negotiated price
+                            for this sale</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-returns">Returns (Expired):</label>
                         <input type="number" id="sale-returns" name="returnedUnits" class="form-control" min="0"
                             value="0">
                     </div>
@@ -228,8 +237,8 @@
     <!-- Success/Error messages -->
     <div id="message" class="message" style="display: none;"></div>
 
-    <script src="navigation.js"></script>
-    <script src="app.js?v=1.4"></script>
+    <script src="navigation.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script src="print-functions.js"></script>
 </body>
 

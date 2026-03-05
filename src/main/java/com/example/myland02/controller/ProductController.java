@@ -39,7 +39,6 @@ public class ProductController {
                 .map(product -> {
                     product.setName(productDetails.getName());
                     product.setBasePrice(productDetails.getBasePrice());
-                    product.setSellingPrice(productDetails.getSellingPrice());
                     product.setProductCost(productDetails.getProductCost());
                     return ResponseEntity.ok(productService.saveProduct(product));
                 })

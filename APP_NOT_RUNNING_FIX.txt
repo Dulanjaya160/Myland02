@@ -1,0 +1,118 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                      APP NOT RUNNING - QUICK FIX                             ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PROBLEM:
+════════
+The app window opens but shows a network error:
+"Failed to fetch http://127.0.0.1:8080/"
+
+WHY THIS HAPPENS:
+═════════════════
+✓ The backend IS starting successfully (takes ~7 seconds)
+✓ BUT the installed app has the OLD backend JAR (without /health endpoint)
+✓ The health check fails, so Electron can't detect when backend is ready
+✓ Result: Page tries to load before backend is fully ready
+
+THE SOLUTION:
+═════════════
+You need to reinstall with the NEW version that has all the fixes.
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          EASIEST WAY - RUN THIS:                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Double-click: UPDATE_NOW.bat
+
+This script will:
+1. Close the running app
+2. Open Windows Settings to uninstall
+3. Clean old data
+4. Install the new version
+
+Just follow the prompts!
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          MANUAL WAY:                                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Step 1: Close the Application
+──────────────────────────────
+Close the Myland Food Management window
+
+
+Step 2: Uninstall Old Version
+──────────────────────────────
+1. Press Win + I (Windows Settings)
+2. Go to: Apps → Installed apps
+3. Find: "Myland Food Management"
+4. Click ... → Uninstall
+5. Confirm
+
+
+Step 3: Delete Old Data
+───────────────────────
+1. Press Win + R
+2. Type: %APPDATA%\myland-desktop
+3. Press Enter
+4. Delete the entire folder
+
+
+Step 4: Install New Version
+────────────────────────────
+1. Go to: C:\Projects\Myland02\electron\dist\
+2. Double-click: Myland Food Management-Setup-1.0.0.exe
+3. Follow installation wizard
+4. Launch the application
+
+
+Step 5: Verify It Works
+───────────────────────
+1. Application should start and show the interface
+2. Go to Production page
+3. Try adding a production record
+4. Should work without errors!
+
+
+WHAT'S IN THE NEW VERSION:
+═══════════════════════════
+✓ Health endpoint (/health) for proper backend detection
+✓ Fixed production page save issue
+✓ Better error logging
+✓ Improved startup sequence
+
+
+TROUBLESHOOTING:
+════════════════
+
+If still not working after reinstall:
+─────────────────────────────────────
+1. Check if port 8080 is in use:
+   netstat -ano | findstr :8080
+   
+2. Check the backend log:
+   %APPDATA%\myland-desktop\backend.log
+   
+3. Look for "Started Myland02Application" message
+   (Should appear within 10 seconds)
+
+4. If backend starts but page doesn't load:
+   - Wait 10-15 seconds
+   - Refresh the page (Ctrl+R)
+
+
+Still Having Issues?
+────────────────────
+Run: diagnose-installed.bat
+This will show you exactly what's happening.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                    QUICKEST FIX: RUN UPDATE_NOW.BAT
+
+═══════════════════════════════════════════════════════════════════════════════

@@ -132,7 +132,7 @@ public class MylandController {
             if (netUnits < 0)
                 netUnits = 0; // preventative
 
-            Double sellingPrice = product.getSellingPrice() != null ? product.getSellingPrice() : 0.0;
+            Double sellingPrice = sale.getSellingPrice() != null ? sale.getSellingPrice() : 0.0;
             Double productCost = product.getProductCost() != null ? product.getProductCost() : 0.0;
 
             double totalIncome = netUnits * sellingPrice;

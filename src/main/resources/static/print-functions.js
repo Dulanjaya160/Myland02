@@ -2,34 +2,47 @@
 // PRINT FUNCTIONS FOR MYLAND FOOD MANAGEMENT SYSTEM
 // =====================================================
 
-// Helper function to print in the same tab without opening new windows
+// Helper function to print using a hidden iframe for maximum reliability and working print previews
 function printInSameTab(printContent) {
-    // Create a hidden iframe for printing
-    let printFrame = document.getElementById('print-frame');
-    if (!printFrame) {
-        printFrame = document.createElement('iframe');
-        printFrame.id = 'print-frame';
-        printFrame.style.position = 'fixed';
-        printFrame.style.right = '0';
-        printFrame.style.bottom = '0';
-        printFrame.style.width = '0';
-        printFrame.style.height = '0';
-        printFrame.style.border = '0';
-        document.body.appendChild(printFrame);
+    console.log('Generating print document using iframe approach...');
+
+    // Remove any existing print iframes
+    const oldIframe = document.getElementById('print-iframe');
+    if (oldIframe) {
+        document.body.removeChild(oldIframe);
     }
-    
-    const printDoc = printFrame.contentWindow.document;
-    printDoc.open();
-    printDoc.write(printContent);
-    printDoc.close();
-    
+
+    // Create a hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+
+    // Append to body
+    document.body.appendChild(iframe);
+
+    // Write content to iframe
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(printContent);
+    doc.close();
+
     // Wait for content to load, then print
-    printFrame.onload = function() {
+    setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+
+        // Cleanup: remove the iframe after a generous delay 
+        // to ensure print dialog is processed
         setTimeout(() => {
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
-        }, 250);
-    };
+            const frameToRemove = document.getElementById('print-iframe');
+            if (frameToRemove) {
+                document.body.removeChild(frameToRemove);
+            }
+        }, 60000); // 1 minute delay
+    }, 500);
 }
 
 function printProducts() {
@@ -72,27 +85,25 @@ function generateProductsPrintContent() {
                         <th>ID</th>
                         <th>Name</th>
                         <th>Price</th>
-                        <th>Selling Price</th>
                         <th>Product Cost</th>
                         <th>Storage Quantity</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
-    
+
     products.forEach(product => {
         html += `
             <tr>
                 <td>${product.id}</td>
                 <td>${product.name}</td>
-                <td>$${product.price.toFixed(2)}</td>
-                <td>$${product.sellingPrice.toFixed(2)}</td>
-                <td>$${product.productCost.toFixed(2)}</td>
-                <td>${product.storageQuantity}</td>
+                <td>$${product.price ? product.price.toFixed(2) : '0.00'}</td>
+                <td>$${product.productCost ? product.productCost.toFixed(2) : '0.00'}</td>
+                <td>${product.storageQuantity || 0}</td>
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -154,7 +165,7 @@ function generateIngredientsPrintContent() {
                 </thead>
                 <tbody>
     `;
-    
+
     let totalValue = 0;
     ingredients.forEach(ingredient => {
         const value = ingredient.quantity * ingredient.pricePerUnit;
@@ -171,7 +182,7 @@ function generateIngredientsPrintContent() {
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -233,17 +244,17 @@ function generateProductionPrintContent() {
                 </thead>
                 <tbody>
     `;
-    
+
     let totalUnits = 0;
     production.forEach(record => {
         totalUnits += record.producedUnits;
         let ingredientsText = 'None';
         if (record.usedIngredients && record.usedIngredients.length > 0) {
-            ingredientsText = record.usedIngredients.map(ui => 
+            ingredientsText = record.usedIngredients.map(ui =>
                 `${ui.ingredient ? ui.ingredient.name : 'Unknown'}: ${ui.quantityUsed}`
             ).join(', ');
         }
-        
+
         html += `
             <tr>
                 <td>${record.id}</td>
@@ -254,7 +265,7 @@ function generateProductionPrintContent() {
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -316,7 +327,7 @@ function generateSalesPrintContent() {
                 </thead>
                 <tbody>
     `;
-    
+
     let totalSold = 0;
     let totalReturned = 0;
     sales.forEach(sale => {
@@ -333,7 +344,7 @@ function generateSalesPrintContent() {
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -394,7 +405,7 @@ function generateShopsPrintContent() {
                 </thead>
                 <tbody>
     `;
-    
+
     shops.forEach(shop => {
         html += `
             <tr>
@@ -406,7 +417,7 @@ function generateShopsPrintContent() {
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -472,7 +483,7 @@ function generateInventoryPrintContent() {
                 </thead>
                 <tbody>
     `;
-    
+
     // Calculate product storage
     products.forEach(product => {
         const produced = production.filter(p => p.product && p.product.id === product.id)
@@ -480,7 +491,7 @@ function generateInventoryPrintContent() {
         const sold = sales.filter(s => s.product && s.product.id === product.id)
             .reduce((sum, s) => sum + s.soldUnits, 0);
         const available = produced - sold;
-        
+
         let status = 'Good';
         let statusClass = 'status-good';
         if (available < 10) {
@@ -490,7 +501,7 @@ function generateInventoryPrintContent() {
             status = 'Low';
             statusClass = 'status-low';
         }
-        
+
         html += `
             <tr>
                 <td>${product.name}</td>
@@ -501,7 +512,7 @@ function generateInventoryPrintContent() {
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -518,7 +529,7 @@ function generateInventoryPrintContent() {
                 </thead>
                 <tbody>
     `;
-    
+
     // Ingredient storage
     ingredients.forEach(ingredient => {
         let status = 'Good';
@@ -530,7 +541,7 @@ function generateInventoryPrintContent() {
             status = 'Low';
             statusClass = 'status-low';
         }
-        
+
         html += `
             <tr>
                 <td>${ingredient.name}</td>
@@ -540,7 +551,7 @@ function generateInventoryPrintContent() {
             </tr>
         `;
     });
-    
+
     html += `
                 </tbody>
             </table>
@@ -565,7 +576,7 @@ function printMonthlyReport() {
         alert('Please select a month first!');
         return;
     }
-    
+
     const printContent = generateMonthlyReportPrintContent(reportMonth);
     printInSameTab(printContent);
 }
@@ -574,16 +585,20 @@ function generateMonthlyReportPrintContent(reportMonth) {
     const currentDate = new Date().toLocaleDateString();
     const monthDate = new Date(reportMonth + '-01');
     const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    
-    // Get summary data from the page
-    const totalSales = document.getElementById('total-sales').textContent;
-    const totalReturns = document.getElementById('total-returns').textContent;
-    const netProfit = document.getElementById('net-profit').textContent;
-    
+
+    // Get summary data from the page with safety checks
+    const totalSalesEl = document.getElementById('total-sales');
+    const totalReturnsEl = document.getElementById('total-returns');
+    const netProfitEl = document.getElementById('net-profit');
+
+    const totalSales = totalSalesEl ? totalSalesEl.textContent : 'N/A';
+    const totalReturns = totalReturnsEl ? totalReturnsEl.textContent : 'N/A';
+    const netProfit = netProfitEl ? netProfitEl.textContent : 'N/A';
+
     // Get table data
     const tbody = document.getElementById('monthly-report-tbody');
-    const rows = tbody.querySelectorAll('tr');
-    
+    const rows = tbody ? tbody.querySelectorAll('tr') : [];
+
     let html = `
         <!DOCTYPE html>
         <html>
@@ -645,7 +660,7 @@ function generateMonthlyReportPrintContent(reportMonth) {
                 </thead>
                 <tbody>
     `;
-    
+
     if (rows.length === 0) {
         html += '<tr><td colspan="6" style="text-align: center;">No data available for this month</td></tr>';
     } else {
@@ -660,7 +675,7 @@ function generateMonthlyReportPrintContent(reportMonth) {
             }
         });
     }
-    
+
     html += `
                 </tbody>
             </table>
@@ -681,7 +696,7 @@ function printDailyReport() {
         alert('Please select a date first!');
         return;
     }
-    
+
     const printContent = generateDailyReportPrintContent(reportDate);
     printInSameTab(printContent);
 }
@@ -689,17 +704,22 @@ function printDailyReport() {
 function generateDailyReportPrintContent(reportDate) {
     const currentDate = new Date().toLocaleDateString();
     const selectedDate = new Date(reportDate).toLocaleDateString();
-    
-    // Get summary data from the page
-    const dailyTotalSales = document.getElementById('daily-total-sales').textContent;
-    const dailyTotalReturns = document.getElementById('daily-total-returns').textContent;
-    const dailyNetProfit = document.getElementById('daily-net-profit').textContent;
-    const dailyActiveShops = document.getElementById('daily-active-shops').textContent;
-    
+
+    // Get summary data from the page with safety checks
+    const dailyTotalSalesEl = document.getElementById('daily-total-sales');
+    const dailyTotalReturnsEl = document.getElementById('daily-total-returns');
+    const dailyNetProfitEl = document.getElementById('daily-net-profit');
+    const dailyActiveShopsEl = document.getElementById('daily-active-shops');
+
+    const dailyTotalSales = dailyTotalSalesEl ? dailyTotalSalesEl.textContent : 'N/A';
+    const dailyTotalReturns = dailyTotalReturnsEl ? dailyTotalReturnsEl.textContent : 'N/A';
+    const dailyNetProfit = dailyNetProfitEl ? dailyNetProfitEl.textContent : 'N/A';
+    const dailyActiveShops = dailyActiveShopsEl ? dailyActiveShopsEl.textContent : 'N/A';
+
     // Get table data
     const tbody = document.getElementById('daily-report-tbody');
-    const rows = tbody.querySelectorAll('tr');
-    
+    const rows = tbody ? tbody.querySelectorAll('tr') : [];
+
     let html = `
         <!DOCTYPE html>
         <html>
@@ -766,7 +786,7 @@ function generateDailyReportPrintContent(reportDate) {
                 </thead>
                 <tbody>
     `;
-    
+
     if (rows.length === 0 || (rows.length === 1 && rows[0].textContent.includes('No sales data'))) {
         html += '<tr><td colspan="7" style="text-align: center;">No sales data for the selected date</td></tr>';
     } else {
@@ -781,7 +801,7 @@ function generateDailyReportPrintContent(reportDate) {
             }
         });
     }
-    
+
     html += `
                 </tbody>
             </table>
@@ -806,7 +826,7 @@ function printShopHistory() {
         alert('Please select a shop first!');
         return;
     }
-    
+
     const printContent = generateShopHistoryPrintContent(shopId);
     printInSameTab(printContent);
 }
@@ -815,17 +835,17 @@ function generateShopHistoryPrintContent(shopId) {
     const currentDate = new Date().toLocaleDateString();
     const shop = shops.find(s => s.id == shopId);
     if (!shop) return '';
-    
+
     // Get summary data from the page
     const totalSales = document.getElementById('shop-total-sales').textContent;
     const totalUnits = document.getElementById('shop-total-units').textContent;
     const totalReturns = document.getElementById('shop-total-returns').textContent;
     const totalTransactions = document.getElementById('shop-total-transactions').textContent;
-    
+
     // Get table data
     const tbody = document.getElementById('shop-history-tbody');
     const rows = tbody.querySelectorAll('tr');
-    
+
     let html = `
         <!DOCTYPE html>
         <html>
@@ -900,7 +920,7 @@ function generateShopHistoryPrintContent(shopId) {
                 </thead>
                 <tbody>
     `;
-    
+
     if (rows.length === 0 || (rows.length === 1 && rows[0].textContent.includes('No sales history'))) {
         html += '<tr><td colspan="6" style="text-align: center;">No sales history found for this shop</td></tr>';
     } else {
@@ -915,7 +935,7 @@ function generateShopHistoryPrintContent(shopId) {
             }
         });
     }
-    
+
     html += `
                 </tbody>
             </table>
@@ -942,17 +962,17 @@ function printSaleBill(sale, product, shop) {
 function generateSaleBillContent(sale, product, shop) {
     const currentDate = new Date().toLocaleDateString();
     const currentTime = new Date().toLocaleTimeString();
-    
+
     // Calculate values
     const soldUnits = sale.soldUnits || 0;
     const returnedUnits = sale.returnedUnits || 0;
     const netUnits = soldUnits - returnedUnits;
-    const unitPrice = product ? product.sellingPrice : 0;
+    const unitPrice = sale.sellingPrice || (product ? product.sellingPrice : 0);
     const subtotal = soldUnits * unitPrice;
     const returnAmount = returnedUnits * unitPrice;
     const total = subtotal - returnAmount;
-    const profit = sale.profit || 0;
-    
+    const profit = sale.totalProfit || 0;
+
     let html = `
         <!DOCTYPE html>
         <html>

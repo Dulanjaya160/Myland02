@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myland-v4';
+const CACHE_NAME = 'myland-v9';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -16,14 +16,15 @@ const ASSETS_TO_CACHE = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// Install Event - Cache Core Assets
+// Install event - cache assets
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Opened cache');
+                console.log('Opened cache:', CACHE_NAME);
                 return cache.addAll(ASSETS_TO_CACHE);
             })
+            .then(() => self.skipWaiting()) // Force the waiting service worker to become the active one
     );
 });
 

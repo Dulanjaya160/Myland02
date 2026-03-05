@@ -27,9 +27,6 @@ public class Product {
     private Double basePrice;
 
     @Column(nullable = false)
-    private Double sellingPrice;
-
-    @Column(nullable = false)
     private Double productCost;
 
     @Column

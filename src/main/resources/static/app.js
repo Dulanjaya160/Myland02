@@ -18,10 +18,34 @@ document.addEventListener('DOMContentLoaded', function () {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+                // Check for updates
+                registration.onupdatefound = () => {
+                    const installingWorker = registration.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                // New update available!
+                                console.log('New content is available; please refresh.');
+                                // Programmatically skip waiting and reload (if sw is set to skipWaiting)
+                                // For now, we'll listen for controller change
+                            }
+                        }
+                    };
+                };
             })
             .catch(err => {
                 console.log('ServiceWorker registration failed: ', err);
             });
+
+        // Add handler to reload when the new service worker takes over
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                refreshing = true;
+                window.location.reload();
+            }
+        });
     }
 });
 
@@ -93,26 +117,21 @@ function loadTabData(tabName) {
             loadProductsForSelect('production-product');
             break;
         case 'sales':
-            loadSales();
-            loadProductsForSelect('sale-product');
-            // Load shops for the sale form
-            if (shops.length === 0) {
-                loadShops().then(() => {
-                    loadShopsForSelect('sale-shop');
-                });
-            } else {
+            Promise.all([
+                loadSales(),
+                loadShops()
+            ]).then(() => {
+                loadProductsForSelect('sale-product');
                 loadShopsForSelect('sale-shop');
-            }
 
-            // Set default dates for reports
-            if (typeof setCurrentMonth === 'function') setCurrentMonth();
-            if (typeof setCurrentDate === 'function') setCurrentDate('report-date');
+                // Set default dates for reports
+                if (typeof setCurrentMonth === 'function') setCurrentMonth();
+                if (typeof setCurrentDate === 'function') setCurrentDate('report-date');
 
-            // Delay report generation slightly to ensure data is loaded
-            setTimeout(() => {
+                // Generate reports with newly loaded data
                 if (typeof generateMonthlyReport === 'function') generateMonthlyReport();
                 if (typeof generateDailyReport === 'function') generateDailyReport();
-            }, 500);
+            });
             break;
         case 'storage':
             loadStorageSummary();
@@ -156,53 +175,57 @@ function setupFormHandlers() {
 
     // Shop form
     attachListener('shop-form', handleShopSubmit);
+
+    // Real-time calculation listeners for Sale form
+    const saleProduct = document.getElementById('sale-product');
+    const saleUnits = document.getElementById('sale-units');
+    const salePrice = document.getElementById('sale-selling-price');
+
+    if (saleProduct) saleProduct.addEventListener('change', calculateSaleValues);
+    if (saleUnits) saleUnits.addEventListener('input', calculateSaleValues);
+    if (salePrice) salePrice.addEventListener('input', calculateSaleValues);
 }
 
 // Product Management
 function showAddProductForm() {
     const form = document.getElementById('product-form');
     const formContainer = document.getElementById('add-product-form');
-    
+
     // Reset form and clear any edit state
     form.reset();
     delete form.dataset.editId;
-    
+
     // Reset form title
     const title = document.querySelector('#add-product-form h3');
     if (title) {
         title.textContent = 'Add New Product';
     }
-    
+
     // Show the form
     formContainer.style.display = 'block';
-    
-    console.log('[showAddProductForm] Form reset and ready for new product');
 }
 
 function hideAddProductForm() {
     document.getElementById('add-product-form').style.display = 'none';
-    document.getElementById('product-form').reset();
-    document.querySelector('#add-product-form h3').textContent = 'Add New Product';
-    delete document.getElementById('product-form').dataset.editId;
 }
 
 function handleProductSubmit(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const form = e.target;
+    const formData = new FormData(form);
+
     const product = {
-        name: formData.get('name'),
+        name: (formData.get('name') || '').trim(),
         basePrice: parseFloat(formData.get('basePrice')),
-        sellingPrice: parseFloat(formData.get('sellingPrice')),
-        productCost: parseFloat(formData.get('productCost'))
+        productCost: parseFloat(formData.get('productCost')) || 0
     };
 
-    // Validation
-    if (product.basePrice < 0 || product.sellingPrice < 0 || product.productCost < 0) {
-        showMessage('Prices cannot be negative', 'error');
+    if (!product.name) {
+        showMessage('Product name is required', 'error');
         return;
     }
 
-    const editId = e.target.dataset.editId;
+    const editId = form.dataset.editId;
     if (editId) {
         product.id = parseInt(editId);
     }
@@ -210,16 +233,16 @@ function handleProductSubmit(e) {
     showLoading();
     fetch(`${API_BASE}/product`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product)
     })
-        .then(response => response.json())
-        .then(data => {
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to save product');
+            return response.json();
+        })
+        .then(() => {
             hideLoading();
-            const message = editId ? 'Product updated successfully!' : 'Product added successfully!';
-            showMessage(message, 'success');
+            showMessage(editId ? 'Product updated successfully!' : 'Product added successfully!', 'success');
             hideAddProductForm();
             loadProducts();
         })
@@ -229,28 +252,79 @@ function handleProductSubmit(e) {
         });
 }
 
-// function loadProducts() - Removed duplicate definition. Using the robust one at the end of file.
+function loadProducts() {
+    showLoading();
+    fetch(`${API_BASE}/products`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            products = Array.isArray(data) ? data : [];
+            displayProducts(products);
+        })
+        .catch(error => {
+            hideLoading();
+            showMessage('Error loading products: ' + error.message, 'error');
+            displayProducts([]);
+        });
+}
 
-// function displayProducts() - Removed duplicate definition. Using the robust one.
+function displayProducts(productsList) {
+    const tbody = document.getElementById('products-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!productsList || productsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
+        return;
+    }
+
+    productsList.forEach(product => {
+        const profitMargin = (product.basePrice && product.productCost) ?
+            ((product.basePrice - product.productCost) / product.basePrice * 100) : 0;
+        const profitMarginColor = profitMargin > 0 ? '#28a745' : profitMargin < 0 ? '#dc3545' : '#6c757d';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.id}</td>
+            <td>${product.name}</td>
+            <td>$${(product.basePrice || 0).toFixed(2)}</td>
+            <td>$${(product.productCost || 0).toFixed(2)}</td>
+            <td style="color: ${profitMarginColor}; font-weight: bold;">
+                ${profitMargin.toFixed(1)}%
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn btn-warning" onclick="editProduct(${product.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn btn-danger" onclick="deleteProduct(${product.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
 
 // Ingredient Management
 function showAddIngredientForm() {
     const form = document.getElementById('ingredient-form');
     const formContainer = document.getElementById('add-ingredient-form');
-    
+
     // Reset form and clear any edit state
     form.reset();
     delete form.dataset.editId;
-    
+
     // Reset form title
     const title = document.querySelector('#add-ingredient-form h3');
     if (title) {
         title.textContent = 'Add New Ingredient';
     }
-    
+
     // Show the form
     formContainer.style.display = 'block';
-    
+
     console.log('[showAddIngredientForm] Form reset and ready for new ingredient');
 }
 
@@ -649,7 +723,7 @@ function loadProduction() {
         .then(data => {
             console.log('[loadProduction] Received data:', data);
             console.log('[loadProduction] Data type:', typeof data, 'Is array:', Array.isArray(data));
-            
+
             if (Array.isArray(data)) {
                 production = data;
                 console.log('[loadProduction] Stored', production.length, 'production records');
@@ -687,7 +761,7 @@ function displayProduction(production) {
 
     production.forEach((record, index) => {
         console.log(`[displayProduction] Processing record ${index + 1}:`, record);
-        
+
         // Format used ingredients
         let ingredientsText = 'None';
         if (record.usedIngredients && record.usedIngredients.length > 0) {
@@ -718,7 +792,7 @@ function displayProduction(production) {
         `;
         tbody.appendChild(row);
     });
-    
+
     console.log('[displayProduction] Successfully displayed all records');
 }
 
@@ -728,8 +802,7 @@ function showAddSaleForm() {
     document.getElementById('sale-form').reset();
     setCurrentDate('sale-date');
 
-    // Load shops first, then populate dropdown
-    // Load all necessary data for validation
+    // Load necessary data for validation and dropdowns
     showLoading();
     Promise.all([
         loadShops(),
@@ -741,16 +814,12 @@ function showAddSaleForm() {
         sales = Array.isArray(salesData) ? salesData : [];
 
         loadShopsForSelect('sale-shop');
-        loadProductsForSelect('sale-product'); // Ensure products are loaded for dropdown
+        loadProductsForSelect('sale-product');
         hideLoading();
     }).catch(err => {
         console.error("Error loading data for sale form:", err);
         hideLoading();
     });
-
-    // Add event listeners for real-time calculation
-    document.getElementById('sale-product').addEventListener('change', calculateSaleValues);
-    document.getElementById('sale-units').addEventListener('input', calculateSaleValues);
 }
 
 function calculateSaleValues() {
@@ -841,8 +910,10 @@ function calculateSaleValues() {
             if (submitBtn) submitBtn.disabled = availableStock <= 0;
         }
 
+        const manualSellingPrice = parseFloat(document.getElementById('sale-selling-price').value) || 0;
+
         if (product && soldUnits > 0) {
-            const sellingPrice = product.sellingPrice || 0;
+            const sellingPrice = manualSellingPrice;
             const productCost = product.productCost || 0;
 
             const income = sellingPrice * soldUnits;
@@ -907,9 +978,15 @@ function handleSaleSubmit(e) {
         product: product,
         shop: shop,
         saleDate: formData.get('saleDate'),
+        sellingPrice: parseFloat(formData.get('sellingPrice')) || 0,
         soldUnits: parseInt(formData.get('soldUnits')) || 0,
         returnedUnits: parseInt(formData.get('returnedUnits')) || 0
     };
+
+    if (sale.sellingPrice < 0) {
+        showMessage("Selling price cannot be negative", "error");
+        return;
+    }
 
     if (sale.soldUnits <= 0) {
         showMessage("Sold units must be greater than 0", "error");
@@ -985,11 +1062,11 @@ function performSaleSubmission(sale, editId) {
             const message = editId ? 'Sale updated successfully!' : 'Sale recorded successfully!';
             showMessage(message, 'success');
             hideAddSaleForm();
-            
+
             // Add small delay to ensure database transaction completes
             setTimeout(() => {
                 loadSales();
-                
+
                 // Show print bill option for new sales (not edits)
                 if (!editId) {
                     if (confirm('Sale recorded successfully! Do you want to print the bill?')) {
@@ -1012,27 +1089,24 @@ function performSaleSubmission(sale, editId) {
 
 function loadSales() {
     showLoading();
-    fetch(`${API_BASE}/sales`)
-        .then(response => response.json())
+    return fetch(`${API_BASE}/sales`)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             console.log('Loaded sales data:', data);
-            console.log('Loaded sales data:', data);
-            if (Array.isArray(data)) {
-                sales = data;
-                displaySales(data);
-            } else {
-                console.error('Expected array for sales but got:', data);
-                sales = [];
-                displaySales([]);
-                showMessage('Error: Invalid sales data received', 'error');
-            }
+            sales = Array.isArray(data) ? data : [];
+            displaySales(sales);
             hideLoading();
+            return sales;
         })
         .catch(error => {
             hideLoading();
             console.error('Error loading sales:', error);
             showMessage('Error loading sales: ' + error.message, 'error');
             displaySales([]);
+            return [];
         });
 }
 
@@ -1283,7 +1357,7 @@ function refreshStorageSummary() {
 // Inventory Management
 function loadInventory() {
     showLoading();
-    fetch(`${API_BASE}/ingredients`)
+    return fetch(`${API_BASE}/ingredients`)
         .then(response => response.json())
         .then(data => {
             if (Array.isArray(data)) {
@@ -1297,11 +1371,13 @@ function loadInventory() {
                 showMessage('Error: Invalid inventory data received', 'error');
             }
             hideLoading();
+            return ingredients;
         })
         .catch(error => {
             hideLoading();
             showMessage('Error loading inventory: ' + error.message, 'error');
             displayInventory([]);
+            return [];
         });
 }
 
@@ -1751,7 +1827,8 @@ function editProduct(id) {
     showAddProductForm();
     document.getElementById('product-name').value = product.name;
     document.getElementById('product-price').value = product.basePrice;
-    document.getElementById('product-selling-price').value = product.sellingPrice;
+    const sellingPriceInput = document.getElementById('product-selling-price');
+    if (sellingPriceInput) sellingPriceInput.value = product.sellingPrice || 0;
     document.getElementById('product-cost').value = product.productCost;
 
     document.querySelector('#add-product-form h3').textContent = 'Edit Product';
@@ -2159,23 +2236,23 @@ function deleteShop(id) {
 // Monthly Report Functions
 function generateMonthlyReport() {
     const monthInput = document.getElementById('report-month');
-    const selectedMonth = monthInput.value;
+    const selectedMonth = monthInput ? monthInput.value : '';
+
+    console.log('Generating monthly report for:', selectedMonth);
+    console.log('Total sales available:', sales.length);
 
     if (!selectedMonth) {
-        showMessage('Please select a month to generate the report', 'error');
+        // Only show message if we are actively trying to generate, not on auto-init
         return;
     }
 
-    const [year, month] = selectedMonth.split('-');
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
-
-    // Filter sales for the selected month
+    // Filter sales for the selected month using string-based comparison
     const monthlySales = sales.filter(sale => {
-        const saleDate = new Date(sale.saleDate);
-        return saleDate >= startDate && saleDate <= endDate;
+        if (!sale.saleDate) return false;
+        return sale.saleDate.substring(0, 7) === selectedMonth;
     });
 
+    console.log('Found monthly sales matches:', monthlySales.length);
     generateMonthlyReportData(monthlySales);
 }
 
@@ -2253,6 +2330,9 @@ function generateDailyReport() {
     const dateInput = document.getElementById('report-date');
     const selectedDate = dateInput.value;
 
+    console.log('Generating daily report for:', selectedDate);
+    console.log('Total sales available:', sales.length);
+
     if (!selectedDate) {
         showMessage('Please select a date to generate the daily report', 'error');
         return;
@@ -2260,9 +2340,11 @@ function generateDailyReport() {
 
     // Filter sales for the selected date
     const dailySales = sales.filter(sale => {
+        console.log(`Checking sale date: [${sale.saleDate}] vs target: [${selectedDate}]`);
         return sale.saleDate === selectedDate;
     });
 
+    console.log('Found daily sales matches:', dailySales.length);
     generateDailyReportData(dailySales, selectedDate);
 }
 
@@ -2334,144 +2416,29 @@ function displayDailyReportTable(dailySales) {
     });
 }
 
-function handleProductSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
 
-    const name = (formData.get('name') || '').trim();
-    const basePriceRaw = formData.get('basePrice');
-    const sellingPriceRaw = formData.get('sellingPrice');
-    const productCostRaw = formData.get('productCost');
-
-    const basePrice = basePriceRaw !== null && basePriceRaw !== '' ? parseFloat(basePriceRaw) : null;
-    const sellingPrice = sellingPriceRaw !== null && sellingPriceRaw !== '' ? parseFloat(sellingPriceRaw) : 0;
-    const productCost = productCostRaw !== null && productCostRaw !== '' ? parseFloat(productCostRaw) : 0;
-
-    // Basic client validation
-    if (!name) {
-        showMessage('Product name is required', 'error');
-        return;
-    }
-    if (basePrice === null || isNaN(basePrice)) {
-        showMessage('Base price is required and must be a number', 'error');
-        return;
-    }
-
-    const product = {
-        name: name,
-        basePrice: basePrice,
-        sellingPrice: isNaN(sellingPrice) ? 0 : sellingPrice,
-        productCost: isNaN(productCost) ? 0 : productCost
-    };
-
-    const editId = form.dataset.editId;
-    if (editId) {
-        product.id = parseInt(editId);
-    }
-
-    // Debug/logging to verify payload
-    console.log('Saving product payload:', JSON.stringify(product));
-
-    showLoading();
-    fetch(`${API_BASE}/product`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(product)
-    })
-        .then(response => {
-            hideLoading();
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.message || 'Failed saving product'); });
-            }
-            return response.json();
-        })
-        .then(data => {
-            const message = editId ? 'Product updated successfully!' : 'Product added successfully!';
-            showMessage(message, 'success');
-            hideAddProductForm();
-            // Add small delay to ensure database transaction completes
-            setTimeout(() => {
-                loadProducts();
-            }, 300);
-        })
-        .catch(error => {
-            hideLoading();
-            showMessage('Error saving product: ' + error.message, 'error');
-            console.error('Product save error:', error);
+// Utility Functions
+function setCurrentDate(elementId) {
+    const today = new Date().toISOString().split('T')[0];
+    if (elementId) {
+        const element = document.getElementById(elementId);
+        if (element) element.value = today;
+    } else {
+        // Set all date inputs to today by default if they are empty
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            if (!input.value) input.value = today;
         });
+    }
 }
 
-// Robust loadProducts
-function loadProducts() {
-    showLoading();
-    fetch(`${API_BASE}/products`)
-        .then(async response => {
-            if (!response.ok) {
-                let err = `Failed to load products: ${response.status}`;
-                try {
-                    const j = await response.json();
-                    err = j.message || JSON.stringify(j);
-                } catch (e) { }
-                throw new Error(err);
-            }
-            return response.json();
-        })
-        .then(data => {
-            hideLoading();
-            // defensive: ensure an array
-            products = Array.isArray(data) ? data : (data ? [data] : []);
-            console.info('Loaded products:', products);
-            displayProducts(products);
-        })
-        .catch(error => {
-            hideLoading();
-            console.error('Error loading products:', error);
-            showMessage('Error loading products: ' + error.message, 'error');
-            displayProducts([]); // show empty table
-        });
-}
+function setCurrentMonth() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const currentMonth = `${year}-${month}`;
 
-// Robust displayProducts
-function displayProducts(products) {
-    const tbody = document.getElementById('products-tbody');
-    if (!tbody) {
-        console.warn('displayProducts: products-tbody not found');
-        return;
+    const monthInput = document.getElementById('report-month');
+    if (monthInput && !monthInput.value) {
+        monthInput.value = currentMonth;
     }
-    tbody.innerHTML = '';
-
-    if (!products || products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No products found</td></tr>';
-        return;
-    }
-
-    products.forEach(product => {
-        const profitMargin = product.sellingPrice && product.productCost ?
-            ((product.sellingPrice - product.productCost) / product.sellingPrice * 100) : 0;
-        const profitMarginColor = profitMargin > 0 ? '#28a745' : profitMargin < 0 ? '#dc3545' : '#6c757d';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${product.id}</td>
-            <td>${product.name}</td>
-            <td>$${(product.basePrice || 0).toFixed(2)}</td>
-            <td>$${(product.sellingPrice || 0).toFixed(2)}</td>
-            <td>$${(product.productCost || 0).toFixed(2)}</td>
-            <td style="color: ${profitMarginColor}; font-weight: bold;">
-                ${profitMargin.toFixed(1)}%
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="action-btn btn-warning" onclick="editProduct(${product.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn btn-danger" onclick="deleteProduct(${product.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
 }

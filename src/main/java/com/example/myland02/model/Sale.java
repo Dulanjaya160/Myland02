@@ -30,6 +30,9 @@ public class Sale {
     private Shop shop;
 
     @Column(nullable = false)
+    private Double sellingPrice;
+
+    @Column(nullable = false)
     private Integer soldUnits;
 
     @Column

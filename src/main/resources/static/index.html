@@ -10,45 +10,12 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <link rel="apple-touch-icon" href="images/myland-icon.png">
-    <script src="app.js?v=1.4"></script>
+    <script src="app.js?v=3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
     <div id="navigation" data-current-page="dashboard"></div>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <i class="fas fa-utensils"></i>
-            Myland Food Management
-        </div>
-        <div class="navbar-menu">
-            <a href="index.html" class="active">Dashboard</a>
-            <a href="products.html">Products</a>
-            <a href="ingredients.html">Ingredients</a>
-            <a href="production.html">Production</a>
-            <a href="sales.html">Sales</a>
-            <a href="shops.html">Shops</a>
-        </div>
-        <div class="navbar-right">
-            <i class="fas fa-bell"></i>
-            <i class="fas fa-user-circle"></i>
-        </div>
-    </nav>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <ul class="sidebar-menu">
-            <li><a href="index.html" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="products.html"><i class="fas fa-box"></i> Products</a></li>
-            <li><a href="ingredients.html"><i class="fas fa-leaf"></i> Ingredients</a></li>
-            <li><a href="inventory.html"><i class="fas fa-boxes"></i> Inventory</a></li>
-            <li><a href="production.html"><i class="fas fa-industry"></i> Production</a></li>
-            <li><a href="sales.html"><i class="fas fa-chart-bar"></i> Sales</a></li>
-            <li><a href="shops.html"><i class="fas fa-store"></i> Shops</a></li>
-            <li><a href="storage.html"><i class="fas fa-warehouse"></i> Storage</a></li>
-        </ul>
-    </aside>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -153,6 +120,10 @@
         </div>
     </div>
 
+    <div id="message" class="message" style="display: none;"></div>
+
+    <script src="navigation.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script>
         // Chart.js example
         const ctx = document.getElementById('salesChart').getContext('2d');

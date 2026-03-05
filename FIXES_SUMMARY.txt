@@ -1,0 +1,106 @@
+================================================================================
+MYLAND DESKTOP APPLICATION - BACKEND ERROR FIX
+================================================================================
+
+PROBLEM:
+--------
+When opening the installed application, you get:
+"Backend Error: The application backend has stopped unexpectedly"
+
+ROOT CAUSES IDENTIFIED:
+-----------------------
+1. Database path not properly passed from Electron to Spring Boot backend
+2. Windows path handling issues (backslashes vs forward slashes)
+3. Missing user data directory configuration
+4. Insufficient error logging to diagnose issues
+
+FIXES APPLIED:
+--------------
+1. Updated Myland02Application.java:
+   - Added support for user.data.dir system property
+   - Improved Windows path normalization
+   - Added comprehensive startup logging
+   - Better error handling with proper exit codes
+
+2. Updated electron/main.js:
+   - Pass user data directory via -Duser.data.dir system property
+   - Set proper environment variables
+   - Improved error messages and logging
+
+3. Created diagnostic tools:
+   - diagnose-installed.bat - Test installed applications
+   - test-backend-fix.bat - Test fixes before building
+   - TROUBLESHOOTING.md - Complete troubleshooting guide
+   - FIX_INSTRUCTIONS.md - Detailed fix documentation
+
+HOW TO APPLY THE FIX:
+---------------------
+
+OPTION 1 - Quick Test First (Recommended):
+   1. Run: test-backend-fix.bat
+   2. Wait for "Started Myland02Application" message
+   3. Press Ctrl+C to stop
+   4. If successful, proceed to Option 2
+
+OPTION 2 - Build and Install:
+   1. Run: build-desktop.bat
+   2. Uninstall old version from Windows Settings
+   3. Delete: %APPDATA%\myland-desktop folder
+   4. Install: electron\dist\Myland Food Management-Setup-1.0.0.exe
+
+OPTION 3 - Diagnose Existing Installation:
+   1. Run: diagnose-installed.bat
+   2. Check the output for specific errors
+   3. Follow TROUBLESHOOTING.md for solutions
+
+VERIFICATION:
+-------------
+After installing the new version:
+1. Application should start without errors
+2. Check %APPDATA%\myland-desktop\backend.log for startup messages
+3. You should see "Started Myland02Application" in the log
+
+TROUBLESHOOTING:
+----------------
+If you still have issues:
+1. Run diagnose-installed.bat
+2. Check backend.log for specific errors
+3. See TROUBLESHOOTING.md for common solutions
+4. Make sure port 8080 is not in use by other applications
+
+FILES MODIFIED:
+---------------
+- src/main/java/com/example/myland02/Myland02Application.java
+- electron/main.js
+
+FILES CREATED:
+--------------
+- QUICK_FIX_GUIDE.md - Simple 3-step fix guide
+- FIX_INSTRUCTIONS.md - Detailed technical documentation
+- TROUBLESHOOTING.md - Complete troubleshooting guide
+- diagnose-installed.bat - Diagnostic tool for installed app
+- test-backend-fix.bat - Test fixes before building
+- FIXES_SUMMARY.txt - This file
+
+TECHNICAL DETAILS:
+------------------
+The main issue was that the Spring Boot backend couldn't determine where to
+create the SQLite database when running from the installed Electron app. The
+backend was trying to use user.home/.myland/ but needed to use Electron's
+app.getPath('userData') instead.
+
+The fix ensures:
+- Electron passes the correct user data directory to Java
+- Java properly receives and uses this directory
+- Paths are normalized for Windows (forward slashes in JDBC URL)
+- Detailed logging helps diagnose any remaining issues
+
+NEXT STEPS:
+-----------
+1. Read QUICK_FIX_GUIDE.md for simple instructions
+2. Run test-backend-fix.bat to verify the fix works
+3. Run build-desktop.bat to create new installer
+4. Reinstall the application
+5. If issues persist, use diagnose-installed.bat and check TROUBLESHOOTING.md
+
+================================================================================

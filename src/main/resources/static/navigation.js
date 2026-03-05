@@ -12,8 +12,8 @@ const navItems = [
 
 function createNavbar(currentPage = '') {
     let menuHtml = '';
-    // Use first 6 items for top nav
-    navItems.slice(0, 6).forEach(item => {
+    // Show all nav items in top nav
+    navItems.forEach(item => {
         const isActive = currentPage === item.id ? 'active' : '';
         menuHtml += `<a href="${item.page}" class="${isActive}">${item.label}</a>`;
     });
@@ -36,7 +36,7 @@ function createNavbar(currentPage = '') {
 
 function createSidebar(currentPage = '') {
     let sidebarHtml = '<aside class="sidebar"><ul class="sidebar-menu">';
-    
+
     navItems.forEach(item => {
         const isActive = currentPage === item.id ? 'active' : '';
         sidebarHtml += `
@@ -46,26 +46,26 @@ function createSidebar(currentPage = '') {
                 </a>
             </li>`;
     });
-    
+
     sidebarHtml += '</ul></aside>';
     return sidebarHtml;
 }
 
 // Insert navigation components into page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const navPlaceholder = document.getElementById('navigation');
     if (navPlaceholder) {
         const currentPage = navPlaceholder.getAttribute('data-current-page') || '';
-        
+
         // Create components
         const navbar = createNavbar(currentPage);
         const sidebar = createSidebar(currentPage);
-        
+
         // Insert into body
         document.body.insertAdjacentHTML('afterbegin', navbar);
         const navbarElement = document.querySelector('.navbar');
         navbarElement.insertAdjacentHTML('afterend', sidebar);
-        
+
         // Remove the placeholder if it was just a marker
         if (navPlaceholder.innerHTML.trim() === '') {
             navPlaceholder.remove();
